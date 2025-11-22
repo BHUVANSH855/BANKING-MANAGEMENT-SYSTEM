@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Transactions</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <div class="header"><div class="brand"><div class="logo">BS</div><div><div class="title">Transactions</div><div class="small">View account transaction history</div></div></div>
+    <div class="controls nav"><a href="index.html">Home</a><a href="create_account.html">Create</a><a href="deposit.html">Deposit</a><a href="withdraw.html">Withdraw</a><a href="transfer.html">Transfer</a><a class="active">Transactions</a></div>
+  </div>
+
+  <div class="card">
+    <form id="txForm" method="get" action="transactions.html">
+      <div class="form-row">
+        <div class="field"><label>Account ID</label><input type="number" name="account_id" required></div>
+      </div>
+      <div class="actions"><button class="btn" type="submit">Load Transactions</button></div>
+    </form>
+
+    <div style="margin-top:14px">
+      <table class="table">
+        <thead><tr><th>Time</th><th>Type</th><th>Amount</th><th>Balance</th><th>Note</th></tr></thead>
+        <tbody id="txBody">
+          <!-- Transactions will be injected here by JS from backend response -->
+        </tbody>
+      </table>
+    </div>
+
+    <p class="hint">This page expects a backend endpoint <code>/api/transactions/{account_id}</code> returning JSON array of transactions.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const form = document.getElementById('txForm');
+  const txBody = document.getElementById('txBody');
+  if(!form) return;
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const id = form.querySelector('[name=account_id]').value;
+    if(!id) return alert('Enter account id');
+    try{
+      const res = await fetch('/api/transactions/'+encodeURIComponent(id));
+      if(!res.ok) throw new Error('Failed to load');
+      const data = await res.json();
+      txBody.innerHTML = '';
+      data.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${t.created_at}</td><td>${t.type}</td><td>${t.amount}</td><td>${t.balance_after}</td><td>${t.note || ''}</td>`;
+        txBody.appendChild(tr);
+      });
+    }catch(err){
+      alert('Could not load transactions: '+err.message);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

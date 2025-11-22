@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create Account</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand"><div class="logo">BS</div><div><div class="title">Create Account</div><div class="small">Fill details below</div></div></div>
+      <div class="controls nav"><a href="index.html">Home</a><a class="active">Create</a><a href="transactions.html">Transactions</a></div>
+    </div>
+
+    <div class="card">
+      <form id="createForm" method="post" action="/api/create_account">
+        <div class="form-row">
+          <div class="field">
+            <label>Name</label>
+            <input type="text" name="name" required>
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" name="email">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Phone</label>
+            <input type="text" name="phone">
+          </div>
+          <div class="field">
+            <label>PIN (4-6 digits)</label>
+            <input type="password" name="pin" minlength="4" maxlength="6" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Initial deposit</label>
+            <input type="number" name="initial_deposit" step="0.01" value="0">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="submit">Create Account</button>
+          <a class="btn ghost" href="index.html">Cancel</a>
+        </div>
+      </form>
+
+      <p class="hint">Note: This form posts to <code>/api/create_account</code>. If you use the provided Python backend, that route is already outlined in the project files.</p>
+    </div>
+  </div>
+</body>
+</html>
+

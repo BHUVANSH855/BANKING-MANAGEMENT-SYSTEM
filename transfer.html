@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Transfer</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <div class="header"><div class="brand"><div class="logo">BS</div><div><div class="title">Transfer</div><div class="small">Send money to another account</div></div></div>
+  <div class="controls nav"><a href="index.html">Home</a><a href="create_account.html">Create</a><a href="deposit.html">Deposit</a><a href="withdraw.html">Withdraw</a><a class="active">Transfer</a></div>
+  </div>
+
+  <div class="card">
+    <form method="post" action="/api/transfer">
+      <div class="form-row">
+        <div class="field"><label>From Account ID</label><input type="number" name="from_id" required></div>
+        <div class="field"><label>To Account ID</label><input type="number" name="to_id" required></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" required></div>
+        <div class="field"><label>PIN</label><input type="password" name="pin" minlength="4" maxlength="6" required></div>
+      </div>
+      <div class="actions"><button class="btn" type="submit">Transfer</button><a class="btn ghost" href="index.html">Cancel</a></div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

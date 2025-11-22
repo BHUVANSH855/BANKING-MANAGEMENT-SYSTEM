@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Banking System - Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo">BS</div>
+        <div>
+          <div class="title">Banking System</div>
+          <div class="small">Simple demo UI — connect to your Python backend</div>
+        </div>
+      </div>
+      <div class="controls nav">
+        <a href="index.html" class="active">Home</a>
+        <a href="create_account.html">Create Account</a>
+        <a href="deposit.html">Deposit</a>
+        <a href="withdraw.html">Withdraw</a>
+        <a href="transfer.html">Transfer</a>
+        <a href="transactions.html">Transactions</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Quick actions</h3>
+        <div class="small">Run operations quickly or visit pages</div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h4>Create account</h4>
+          <p class="small">Create a new customer account with initial deposit.</p>
+          <div class="actions">
+            <a class="btn" href="create_account.html">Create</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>Search account</h4>
+          <form action="view_account.html" method="get">
+            <label>Account ID</label>
+            <input type="number" name="account_id" placeholder="Enter account id (e.g. 1)">
+            <div class="actions">
+              <button class="btn" type="submit">View</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;" class="small">
+        Tip: Use the forms to send requests to backend endpoints. If you don't have a backend yet, these forms can be connected later.
+      </div>
+    </div>
+
+    <div class="footer">Made for college project • Save data in SQLite or MySQL backend</div>
+  </div>
+</body>
+</html>
