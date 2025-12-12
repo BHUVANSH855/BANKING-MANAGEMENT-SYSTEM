@@ -1,9 +1,12 @@
-# gui.py — Full modern Banking GUI (Step 4)
+import os
+print(">>> Loaded gui.py FROM:", os.path.abspath(__file__))
 import tkinter as tk
 from tkinter import ttk, messagebox
 from pathlib import Path
 import models
+import datetime
 from utils import verify_pin
+from live_pincode_lookup import lookup_pin
 
 # ---------- Helper conversion ----------
 def to_int(val, default=0):
@@ -331,3 +334,4 @@ class BankGUI(tk.Tk):
 if __name__ == "__main__":
     app = BankGUI()
     app.mainloop()
+
