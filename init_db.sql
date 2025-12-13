@@ -1,10 +1,23 @@
 PRAGMA foreign_keys = ON;
-
 CREATE TABLE IF NOT EXISTS accounts (
     account_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    -- Basic info
     name TEXT NOT NULL,
     email TEXT UNIQUE,
     phone TEXT,
+    dob TEXT,
+    gender TEXT,
+    id_type TEXT,
+    id_document_path TEXT,
+    photo_path TEXT,
+    addr_line1 TEXT,
+    village TEXT,
+    tehsil TEXT,
+    district TEXT,
+    state TEXT,
+    postal_code TEXT,
+    account_type TEXT,
+    initial_deposit REAL,
     balance REAL NOT NULL DEFAULT 0.0,
     pin_hash TEXT NOT NULL,
     created_at TEXT DEFAULT (datetime('now'))
