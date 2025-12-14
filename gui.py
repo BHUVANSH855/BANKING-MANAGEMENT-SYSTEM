@@ -8,6 +8,12 @@ import datetime
 from utils import verify_pin
 from live_pincode_lookup import lookup_pin
 
+# ---------- Supported image formats ----------
+SUPPORTED_IMAGE_EXTS = (
+    ".jpg", ".jpeg", ".png", ".bmp",
+    ".tiff", ".webp", ".gif", ".ico"
+)
+
 # ---------- Helper conversion ----------
 def to_int(val, default=0):
     try:
@@ -26,9 +32,66 @@ def to_float(val, default=0.0):
 class BankGUI(tk.Tk):
     def __init__(self):
         super().__init__()
+        # Create all variables BEFORE validation is assigned
+        self.full_name_var = tk.StringVar()
+        self.email_var = tk.StringVar()
+        self.phone_var = tk.StringVar()
+        self.pin_var = tk.StringVar()
+        self.confirm_pin_var = tk.StringVar()
+        self.initial_deposit_var = tk.StringVar()
+        self.account_type_var = tk.StringVar()
+        self.dob_var = tk.StringVar()
+        self.dob_entry_widget = None
+        self.age_label_var = tk.StringVar()
+        self.gender_var = tk.StringVar()
+        self.id_type_var = tk.StringVar()
+        self.id_doc_path_var = tk.StringVar()
+        self.photo_path_var = tk.StringVar()
+        self.alt_phone_var = tk.StringVar()
+        self.addr_line1_var = tk.StringVar()
+        self.city_var = tk.StringVar()
+        self.district_var = tk.StringVar()
+        self.state_var = tk.StringVar()
+        self.village_var = tk.StringVar()
+        self.tehsil_var = tk.StringVar()
+        self.postal_code_var = tk.StringVar()
+        self.num_validate = (self.register(self.only_numbers), "%P")
+        self.phone_validate = (self.register(self.only_10_digits), "%P")
+        self.field_widgets = {}
+        # -------- View Account State --------
+        self.current_account = None
+        self.view_tab_buttons = {}
+        self.view_tab_content = None
+        self.active_view_tab = None
+
         self.title("🏦 Banking Management System")
         self.minsize(950, 650)
-        self.configure(bg="#f4f6fa")
+        self.configure(bg="#f0f2f5")
+
+        # --- Gradient Background ---
+        self.bg_canvas = tk.Canvas(self, highlightthickness=0, bd=0)
+        self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+
+        def draw_gradient():
+            self.bg_canvas.delete("grad")
+            height = self.winfo_height()
+            width = self.winfo_width()
+            for i in range(height):
+                # Color transition from light blue → white
+                r1, g1, b1 = 230, 242, 255   # light blue
+                r2, g2, b2 = 255, 255, 255   # white
+
+                r = int(r1 + (r2 - r1) * (i / height))
+                g = int(g1 + (g2 - g1) * (i / height))
+                b = int(b1 + (b2 - b1) * (i / height))
+
+                color = f"#{r:02x}{g:02x}{b:02x}"
+                self.bg_canvas.create_line(0, i, width, i, fill=color, tags="grad")
+
+            self.bg_canvas.tag_lower("grad")
+
+        self.after(50, draw_gradient)
+        self.bind("<Configure>", lambda e: draw_gradient())
 
         # --- Set icon ---
         icon_path = Path(__file__).resolve().parent / "icon.ico"
@@ -334,4 +397,5 @@ class BankGUI(tk.Tk):
 if __name__ == "__main__":
     app = BankGUI()
     app.mainloop()
+
 
