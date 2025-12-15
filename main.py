@@ -181,4 +181,6 @@ if __name__ == '__main__':
         except Exception:
             initialize_db()
         print('Database initialized.')
+    models.ensure_admin_account()
     main_menu()
+  
