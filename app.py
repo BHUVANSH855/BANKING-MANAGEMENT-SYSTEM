@@ -12,11 +12,18 @@ from pathlib import Path
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
+def require_admin(pin):
+    acc = models.get_account_by_email("admin@bank.local")
+    if not acc or acc.get("role") != "ADMIN":
+        return False
+    return verify_pin(pin, acc["pin_hash"])
+
+
 # Try to import project modules (models/db/utils)
 try:
     import models
     from db import initialize_db
-    from utils import verify_pin
+    from utils import verify_pin, hash_pin
 except Exception as e:
     print("Error importing project modules (models/db/utils). Make sure these files are in the same folder as app.py.", file=sys.stderr)
     traceback.print_exc()
@@ -201,12 +208,192 @@ def api_get_account(account_id: int):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
+    
+@app.route("/api/admin/login", methods=["POST"])
+def admin_login():
+    data = request.get_json(force=True)
+    pin = data.get("pin", "")
 
+    if not require_admin(pin):
+        return jsonify({"error": "Invalid admin PIN"}), 403
+
+    return jsonify({"status": "success"})
+
+@app.route("/api/admin/change-pin", methods=["POST"])
+def admin_change_pin():
+    data = request.get_json(force=True)
+    old_pin = data.get("old_pin")
+    new_pin = data.get("new_pin")
+
+    acc = models.get_account_by_email("admin@bank.local")
+
+    if not acc or not verify_pin(old_pin, acc["pin_hash"]):
+        return jsonify({"error": "Invalid old PIN"}), 403
+
+    if not new_pin.isdigit() or not (4 <= len(new_pin) <= 6):
+        return jsonify({"error": "PIN must be 4–6 digits"}), 400
+
+    with models.get_conn(True) as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE accounts SET pin_hash=? WHERE account_id=?",
+            (hash_pin(new_pin), acc["account_id"])
+        )
+        conn.commit()
+
+    return jsonify({"status": "PIN updated successfully"})
+
+
+@app.route("/api/admin/bank-balance", methods=["POST"])
+def admin_bank_balance():
+    data = request.get_json(force=True)
+    pin = data.get("pin", "")
+
+    if not require_admin(pin):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    with models.get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT balance FROM system_funds WHERE id=1")
+        bal = cur.fetchone()["balance"]
+
+    return jsonify({"bank_balance": bal})
+
+@app.route("/api/admin/stats", methods=["POST"])
+def admin_stats():
+    data = request.get_json(force=True)
+    pin = data.get("pin", "")
+
+    if not require_admin(pin):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    with models.get_conn() as conn:
+        cur = conn.cursor()
+
+        cur.execute("SELECT COUNT(*) AS total_users FROM accounts WHERE role='USER'")
+        users = cur.fetchone()["total_users"]
+
+        cur.execute("SELECT SUM(amount) AS total_deposits FROM transactions WHERE type='Deposit'")
+        deposits = cur.fetchone()["total_deposits"] or 0
+
+        cur.execute("SELECT SUM(amount) AS total_withdrawals FROM transactions WHERE type='Withdraw'")
+        withdrawals = cur.fetchone()["total_withdrawals"] or 0
+
+    return jsonify({
+        "total_users": users,
+        "total_deposits": deposits,
+        "total_withdrawals": withdrawals
+    })
+
+@app.route("/api/admin/users", methods=["POST"])
+def admin_users():
+    data = request.get_json(force=True)
+    pin = data.get("pin", "")
+
+    if not require_admin(pin):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    with models.get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT
+                account_id,
+                name,
+                email,
+                phone,
+                balance,
+                is_locked
+            FROM accounts
+            WHERE role='USER'
+            ORDER BY account_id
+        """)
+        rows = cur.fetchall()
+
+    users = []
+    for r in rows:
+        users.append({
+            "account_id": r["account_id"],
+            "name": r["name"],
+            "email": r["email"],
+            "phone": r["phone"],
+            "balance": r["balance"],
+            "status": "Locked" if r["is_locked"] else "Active"
+        })
+
+    return jsonify(users)
+
+@app.route("/api/admin/transactions", methods=["POST"])
+def admin_all_transactions():
+    data = request.get_json(force=True)
+    pin = data.get("pin", "")
+
+    if not require_admin(pin):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    with models.get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT
+                t.id,
+                t.account_id,
+                a.name,
+                t.type,
+                t.amount,
+                t.balance_after,
+                t.note,
+                t.created_at
+            FROM transactions t
+            JOIN accounts a ON t.account_id = a.account_id
+            WHERE a.role='USER'
+            ORDER BY t.created_at DESC
+        """)
+        rows = cur.fetchall()
+
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route("/api/admin/toggle-lock", methods=["POST"])
+def admin_toggle_lock():
+    data = request.get_json(force=True)
+    pin = data.get("pin", "")
+    account_id = data.get("account_id")
+
+    if not require_admin(pin):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    if not account_id:
+        return jsonify({"error": "Account ID required"}), 400
+
+    with models.get_conn(True) as conn:
+        cur = conn.cursor()
+
+        cur.execute(
+            "SELECT is_locked FROM accounts WHERE account_id=? AND role='USER'",
+            (account_id,)
+        )
+        row = cur.fetchone()
+
+        if not row:
+            return jsonify({"error": "User not found"}), 404
+
+        new_status = 0 if row["is_locked"] else 1
+
+        cur.execute(
+            "UPDATE accounts SET is_locked=? WHERE account_id=?",
+            (new_status, account_id)
+        )
+
+        conn.commit()
+
+    return jsonify({
+        "account_id": account_id,
+        "status": "Locked" if new_status else "Active"
+    })
 
 # --------------------------------------------------------------------
-
 if __name__ == "__main__":
     ensure_db_initialized()
+    models.ensure_admin_account()
     print_startup_info()
     print("URL map (routes):")
     print(app.url_map)
