@@ -390,6 +390,8 @@ def admin_toggle_lock():
         "status": "Locked" if new_status else "Active"
     })
 
+
+
 # --------------------------------------------------------------------
 if __name__ == "__main__":
     ensure_db_initialized()
