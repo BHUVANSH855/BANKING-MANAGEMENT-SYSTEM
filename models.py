@@ -130,7 +130,7 @@ def add_transaction(cur, account_id, type_, amount, balance_after, note=None):
         (account_id, type_, amount, balance_after, note)
     )
 
-def deposit(account_id, amount):
+def deposit(account_id, amount, note=None):
     if amount <= 0:
         raise ValueError('Amount must be positive')
 
@@ -139,9 +139,10 @@ def deposit(account_id, amount):
 
         # Fetch user
         cur.execute(
-            "SELECT balance FROM accounts WHERE account_id=? AND role='USER'",
+            "SELECT balance, is_locked FROM accounts WHERE account_id=? AND role='USER'",
             (account_id,)
         )
+        
         row = cur.fetchone()
         if not row:
             raise ValueError('Account not found')
@@ -163,14 +164,14 @@ def deposit(account_id, amount):
             'Deposit',
             amount,
             new_balance,
-            'Deposit credited from bank'
+            note or 'Deposit credited from bank'
         )
 
         conn.commit()
         return new_balance
 
 
-def withdraw(account_id, amount):
+def withdraw(account_id, amount, note=None):
     if amount <= 0:
         raise ValueError('Amount must be positive')
 
@@ -178,7 +179,7 @@ def withdraw(account_id, amount):
         cur = conn.cursor()
 
         cur.execute(
-            "SELECT balance FROM accounts WHERE account_id=? AND role='USER'",
+            "SELECT balance, is_locked FROM accounts WHERE account_id=? AND role='USER'",
             (account_id,)
         )
         row = cur.fetchone()
@@ -203,7 +204,7 @@ def withdraw(account_id, amount):
             'Withdraw',
             amount,
             new_balance,
-            'Withdrawal debited to bank'
+            note or 'Withdrawal debited to bank'
         )
 
         conn.commit()
