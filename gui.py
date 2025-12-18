@@ -11,19 +11,54 @@ import datetime
 from utils import verify_pin
 from live_pincode_lookup import lookup_pin
 import re
+import winsound
 
 UPI_REGEX = re.compile(r"^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$")
-
-
+DAILY_ATM_LIMIT = 25000
 BANK_MASTER_UPI = "bank@upi"
 RUPEE = "₹"
-
+FREE_ATM_WITHDRAWALS = 3
+ATM_CHARGE_AFTER_FREE = 20
+DAILY_TRANSFER_LIMIT = 50000
+THEMES = {
+    "light": {
+        "bg": "#f8fafc",
+        "card": "#ffffff",
+        "sidebar": "#1e293b",
+        "sidebar_hover": "#334155",
+        "header": "#1e3a8a",
+        "text": "#1e293b",
+        "muted": "#475569",
+        "primary": "#2563eb",
+        "success": "#16a34a",
+        "danger": "#dc2626",
+        "panel": "#eef6ff",
+        "icon_panel": "#e0ecff",
+    },
+    "dark": {
+        "bg": "#0f172a",
+        "card": "#111827",
+        "sidebar": "#020617",
+        "sidebar_hover": "#020617",
+        "header": "#020617",
+        "text": "#e5e7eb",
+        "muted": "#9ca3af",
+        "primary": "#3b82f6",
+        "success": "#22c55e",
+        "danger": "#ef4444",
+        "panel": "#020617",
+        "icon_panel": "#020617",
+    }
+}
 
 # ---------- Supported image formats ----------
 SUPPORTED_IMAGE_EXTS = (
     ".jpg", ".jpeg", ".png", ".bmp",
     ".tiff", ".webp", ".gif", ".ico"
 )
+
+def theme_color(self, key):
+    return self.theme.get(key, "#ffffff")
 
 # ---------- Helper conversion ----------
 def to_int(val, default=0):
@@ -37,6 +72,35 @@ def to_float(val, default=0.0):
         return float(val)
     except Exception:
         return default
+
+# ---------- Global Currency Formatter ----------
+def format_currency(value):
+    """
+    Formats number into Indian currency format with ₹
+    Example: 1234567 -> ₹12,34,567
+    """
+    try:
+        value = float(str(value).replace(",", ""))
+    except:
+        return "₹0"
+
+    value = int(value)
+    s = str(value)
+
+    if len(s) <= 3:
+        return f"₹{s}"
+
+    last3 = s[-3:]
+    rest = s[:-3]
+    parts = []
+
+    while len(rest) > 2:
+        parts.append(rest[-2:])
+        rest = rest[:-2]
+    if rest:
+        parts.append(rest)
+
+    return "₹" + ",".join(reversed(parts)) + "," + last3
 
 #----------- Login UI---------------
 class LoginGUI(tk.Tk):
@@ -63,7 +127,7 @@ class LoginGUI(tk.Tk):
             variable=self.login_type, value="ADMIN"
         ).pack(side="left", padx=10)
 
-        self.acc_label = tk.Label(self, text="Account ID")
+        self.acc_label = tk.Label(self, text="Account No.")
         self.acc_label.pack()
         self.acc = tk.Entry(self)
         self.acc.pack()
@@ -105,11 +169,11 @@ class LoginGUI(tk.Tk):
         # ---------- USER LOGIN ----------
         aid = to_int(user_id)
         if aid <= 0:
-            return messagebox.showerror("Login Failed", "Invalid Account ID")
+            return messagebox.showerror("Login Failed", "Invalid Account Number")
 
         acc = models.get_account(aid)
         if not acc:
-            return messagebox.showerror("Login Failed", "Invalid Account ID")
+            return messagebox.showerror("Login Failed", "Invalid Account Number")
 
         # 🔒 Lock check ONLY for USER
         if acc.get("is_locked") :
@@ -191,6 +255,8 @@ class BankGUI(tk.Tk):
             "account_id": None,
             "role": "USER"   # default
         }
+        self.current_theme = "light"
+        self.theme = THEMES[self.current_theme]
 
         def draw_gradient():
             # 🔒 SAFETY CHECK
@@ -249,6 +315,26 @@ class BankGUI(tk.Tk):
 
         # --- ttk styling ---
         style = ttk.Style(self)
+        def apply_ttk_theme():
+            bg = self.theme["card"]
+            fg = self.theme["text"]
+
+            style.configure(
+                "TLabel",
+                background=bg,
+                foreground=fg
+            )
+            style.configure(
+                "TEntry",
+                fieldbackground=bg,
+                foreground=fg
+            )
+            style.configure(
+                "TButton",
+                background=self.theme["primary"],
+                foreground="white"
+            )
+
         preferred = ("vista", "xpnative", "clam")
         for t in preferred:
             try:
@@ -304,7 +390,23 @@ class BankGUI(tk.Tk):
             fg="#1e293b"
         )
         self.welcome_label.pack(anchor="w", padx=20, pady=15)
+        toggle_btn = tk.Label(
+            self.topbar,
+            text="🌙",
+            font=("Segoe UI", 14),
+            bg="white",
+            cursor="hand2"
+        )
+        toggle_btn.pack(anchor="e", padx=20)
 
+        def toggle_theme(event=None):
+            self.current_theme = "dark" if self.current_theme == "light" else "light"
+            self.theme = THEMES[self.current_theme]
+            toggle_btn.config(text="☀️" if self.current_theme == "dark" else "🌙")
+            apply_ttk_theme()
+            self.apply_theme()
+
+        toggle_btn.bind("<Button-1>", toggle_theme)
         
         # Track currently active sidebar button
         self.active_button = None
@@ -313,7 +415,7 @@ class BankGUI(tk.Tk):
         self.tab_buttons = {}
         # Build sidebar on startup (empty until login sets session)
         self.build_sidebar()
-
+        self.apply_theme()
 
     def build_sidebar(self):
         for w in self.sidebar.winfo_children():
@@ -363,6 +465,56 @@ class BankGUI(tk.Tk):
     def logout(self):
         self.destroy()
         LoginGUI().mainloop()
+
+    def attach_rupee_formatter(self, var: tk.StringVar):
+        def on_change(*_):
+            val = var.get().replace(",", "")
+            if val.isdigit():
+                formatted = self.format_indian_number(val)
+                if formatted != var.get():
+                    var.set(formatted)
+        var.trace_add("write", on_change)
+    
+    def apply_theme(self):
+        t = self.theme
+
+        # Root areas
+        self.configure(bg=t["bg"])
+        self.content.configure(bg=t["bg"])
+        self.sidebar.configure(bg=t["sidebar"])
+        self.topbar.configure(bg=t["card"])
+
+        self.welcome_label.config(
+            bg=t["card"],
+            fg=t["text"]
+        )
+
+        # 🔁 Update sidebar buttons
+        for w in self.sidebar.winfo_children():
+            if isinstance(w, tk.Button):
+                w.config(
+                    bg=t["sidebar"],
+                    fg="white",
+                    activebackground=t["sidebar_hover"]
+                )
+
+        # 🔁 Update visible cards/content dynamically
+        def recolor(parent):
+            for w in parent.winfo_children():
+                try:
+                    if isinstance(w, tk.Frame):
+                        if w.cget("bg") in ("white", "#ffffff", "#f8fafc"):
+                            w.config(bg=t["card"])
+                    elif isinstance(w, tk.Label):
+                        w.config(
+                            bg=w.cget("bg") if w.cget("bg") != "white" else t["card"],
+                            fg=t["text"]
+                        )
+                except:
+                    pass
+                recolor(w)
+
+        recolor(self.content)
     
     def format_indian_number(self, num_str):
         """
@@ -463,9 +615,9 @@ class BankGUI(tk.Tk):
             text="Continue",
             bg="#2563eb",
             fg="white",
-            font=("Segoe UI", 11, "bold"),
-            padx=25,
-            pady=8,
+            font=("Segoe UI", 14, "bold"),
+            padx=50,
+            pady=16,
             cursor="hand2"
         )
         btn.pack(pady=15)
@@ -473,6 +625,197 @@ class BankGUI(tk.Tk):
         btn.bind("<Enter>", lambda e: btn.config(bg="#1e3a8a"))
         btn.bind("<Leave>", lambda e: btn.config(bg="#2563eb"))
         btn.bind("<Button-1>", lambda e: popup.destroy())
+
+    def ask_pin_and_proceed(self, account_no, on_success):
+        popup = tk.Toplevel(self)
+        popup.title("Enter PIN")
+        popup.transient(self)
+        popup.grab_set()
+        popup.resizable(False, False)
+        popup.configure(bg="white")
+
+        w, h = 320, 180
+        x = self.winfo_x() + (self.winfo_width() // 2) - (w // 2)
+        y = self.winfo_y() + (self.winfo_height() // 2) - (h // 2)
+        popup.geometry(f"{w}x{h}+{x}+{y}")
+
+        tk.Label(
+            popup,
+            text="🔐 Enter Transaction PIN",
+            font=("Segoe UI", 13, "bold"),
+            bg="white"
+        ).pack(pady=15)
+
+        pin_var = tk.StringVar()
+
+        pin_entry = tk.Entry(
+            popup,
+            textvariable=pin_var,
+            show="*",
+            width=20
+        )
+        pin_entry.pack()
+        pin_entry.focus()
+
+        def verify():
+            acc = models.get_account(account_no)
+            if not acc:
+                popup.destroy()
+                return messagebox.showerror("Error", "Account not found")
+
+            if not verify_pin(pin_var.get(), acc["pin_hash"]):
+                models.register_failed_attempt(account_no)
+
+                if acc.get("is_locked"):
+                    popup.destroy()
+                    return messagebox.showerror(
+                        "Account Locked",
+                        "3 wrong PIN attempts.\nAccount has been locked."
+                    )
+
+                messagebox.showerror("Wrong PIN", "Incorrect PIN")
+                pin_var.set("")
+                return
+
+            # ✅ Correct PIN
+            models.reset_failed_attempts(account_no)
+            popup.destroy()
+            on_success()
+
+        tk.Button(
+            popup,
+            text="Confirm",
+            bg="#2563eb",
+            fg="white",
+            command=verify
+        ).pack(pady=15)
+
+    def show_withdraw_receipt(self, acc_id, amount, fee, balance):
+        win = tk.Toplevel(self)
+        win.title("ATM Receipt")
+        win.resizable(False, False)
+        win.configure(bg="white")
+
+        tk.Label(
+            win,
+            text="🏧 ATM Withdrawal Receipt",
+            font=("Segoe UI", 14, "bold"),
+            bg="white"
+        ).pack(pady=10)
+
+        details = [
+            f"Account ID: {acc_id}",
+            f"Amount: ₹{amount}",
+            f"Charges: ₹{fee}",
+            f"Date: {datetime.datetime.now().strftime('%d-%m-%Y %I:%M %p')}",
+            f"Available Balance: ₹{balance}",
+        ]
+
+        for d in details:
+            tk.Label(win, text=d, bg="white").pack(anchor="w", padx=20)
+
+        tk.Button(win, text="Close", command=win.destroy).pack(pady=15)
+
+    def show_transfer_receipt(self, from_acc, to_acc, amount, balance_after):
+        win = tk.Toplevel(self)
+        win.title("Transfer Receipt")
+        win.resizable(False, False)
+        win.configure(bg="white")
+
+        tk.Label(
+            win,
+            text="🔁 Fund Transfer Receipt",
+            font=("Segoe UI", 14, "bold"),
+            bg="white"
+        ).pack(pady=10)
+
+        details = [
+            f"From Account No.: {from_acc}",
+            f"To Account No.: {to_acc}",
+            f"Amount Transferred: ₹{amount}",
+            f"Date: {datetime.datetime.now().strftime('%d-%m-%Y %I:%M %p')}",
+            f"Available Balance: ₹{balance_after}",
+        ]
+
+        for d in details:
+            tk.Label(win, text=d, bg="white").pack(anchor="w", padx=20, pady=2)
+
+        tk.Button(win, text="Close", command=win.destroy).pack(pady=15)
+
+
+    def show_atm_simulation_popup(self, on_continue):
+        win = tk.Toplevel(self)
+        win.title("ATM Withdrawal Simulation")
+        win.transient(self)
+        win.grab_set()
+        win.resizable(False, False)
+        win.configure(bg="white")
+
+        w, h = 420, 460
+        x = self.winfo_x() + (self.winfo_width() // 2) - (w // 2)
+        y = self.winfo_y() + (self.winfo_height() // 2) - (h // 2)
+        win.geometry(f"{w}x{h}+{x}+{y}")
+
+        tk.Label(
+            win,
+            text="🏧 ATM Withdrawal Simulation",
+            font=("Segoe UI", 14, "bold"),
+            bg="white",
+            fg="#1e3a8a"
+        ).pack(pady=10)
+
+        # ---- GIF / IMAGE ----
+        gif_path = Path(__file__).parent / "atm_cash_dispense.gif"
+        if gif_path.exists():
+            img = Image.open(gif_path)
+            self._atm_frames = []
+
+            try:
+                while True:
+                    frame = img.copy().resize((300, 300))
+                    self._atm_frames.append(ImageTk.PhotoImage(frame))
+                    img.seek(len(self._atm_frames))
+            except EOFError:
+                pass
+            try:
+                winsound.PlaySound("atm_cash.wav", winsound.SND_ASYNC)
+            except:
+                pass
+
+            lbl = tk.Label(win, bg="white")
+            lbl.pack(pady=10)
+
+            def animate(i=0):
+                lbl.config(image=self._atm_frames[i])
+                win.after(120, animate, (i + 1) % len(self._atm_frames))
+
+            animate()
+        else:
+            tk.Label(
+                win,
+                text="(ATM Simulation Visual)",
+                fg="gray",
+                bg="white"
+            ).pack(pady=40)
+
+        tk.Label(
+            win,
+            text="⚠ This is a simulation only.\nNo physical cash is dispensed.",
+            font=("Segoe UI", 9),
+            bg="white",
+            fg="#475569"
+        ).pack(pady=10)
+
+        btn_frame = tk.Frame(win, bg="white")
+        btn_frame.pack(pady=10)
+        # ⏱ Auto close after 2 seconds and continue
+        win.after(2000, lambda: (win.destroy(), on_continue()))
+        tk.Button(
+            btn_frame,
+            text="Cancel",
+            command=win.destroy
+        ).pack(side="left", padx=10)
+
 
     def show_success_animation(self):
         win = tk.Toplevel(self)
@@ -1743,7 +2086,7 @@ class BankGUI(tk.Tk):
             search = tk.Frame(left_container, bg="white")
             search.pack(fill="x", padx=30, pady=25)
 
-            tk.Label(search, text="Account ID", bg="white").grid(row=0, column=0, sticky="w")
+            tk.Label(search, text="Account No.", bg="white").grid(row=0, column=0, sticky="w")
             acc_entry = tk.Entry(search, width=14)
             acc_entry.grid(row=0, column=1, padx=10)
 
@@ -2088,12 +2431,12 @@ class BankGUI(tk.Tk):
         txs = models.get_transactions(acc["account_id"], limit=20)
 
         for t in txs:
-            debit = t["amount"] if "Withdraw" in t["type"] else ""
-            credit = t["amount"] if "Deposit" in t["type"] else ""
+            debit = t["amount"] if t["type"] in ("Withdraw", "Transfer-Out") else ""
+            credit = t["amount"] if t["type"] in ("Deposit", "Transfer-In") else ""
 
             tree.insert("", "end", values=(
                 t["created_at"][:16],
-                t["type"],
+                t.get("note") or t["type"],
                 debit,
                 credit,
                 t["balance_after"]
@@ -2251,7 +2594,7 @@ class BankGUI(tk.Tk):
 
         # Account ID (Admin only)
         if self.session["role"] == "ADMIN":
-            ttk.Label(form, text="Account ID").grid(row=0, column=0, sticky="w", pady=ROW_PAD)
+            ttk.Label(form, text="Account No.").grid(row=0, column=0, sticky="w", pady=ROW_PAD)
             aid = ttk.Entry(form, width=18)
             aid.grid(row=0, column=1, sticky="w")
         else:
@@ -2273,6 +2616,7 @@ class BankGUI(tk.Tk):
 
         amt_var = tk.StringVar()
         amt = ttk.Entry(amount_frame, width=22, textvariable=amt_var)
+        self.attach_rupee_formatter(amt_var)
         amt.pack(side="left")
 
         def on_amount_change(*args):
@@ -2439,28 +2783,31 @@ class BankGUI(tk.Tk):
 
             if method.get() in ("UPI", "QR") and not self.deposit_upi_verified:
                 return messagebox.showerror("Payment Not Verified", "Complete verification before deposit")
-            try:
-                note = None
-                if method.get() == "QR":
-                    note = f"QR Deposit Ref: {getattr(self, 'qr_reference', '')}"
 
-                new = models.deposit(acc, amount, note=note)
+            def do_deposit():
+                try:
+                    note = None
+                    if method.get() == "QR":
+                        note = f"QR Deposit Ref: {getattr(self, 'qr_reference', '')}"
 
-                messagebox.showinfo("Success", f"₹{amount} deposited\nNew Balance: ₹{new}")
-                amt.delete(0, tk.END)
-                self.deposit_upi_verified = False
-                update_ui()
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
+                    new = models.deposit(acc, amount, note=note)
+                    messagebox.showinfo("Success", f"₹{amount} deposited\nNew Balance: ₹{new}")
+                    amt.delete(0, tk.END)
+                    self.deposit_upi_verified = False
+                    update_ui()
+                except Exception as e:
+                    messagebox.showerror("Error", str(e))
+
+            self.ask_pin_and_proceed(acc, do_deposit)
 
         confirm_btn = tk.Label(
             card,
             text="✔  Confirm Deposit",
-            font=("Segoe UI", 15, "bold"),
+            font=("Segoe UI", 17, "bold"),
             bg="#16a34a",
             fg="white",
-            padx=50,
-            pady=16,
+            padx=70,
+            pady=20,
             cursor="hand2"
         )
         confirm_btn.grid(row=1, column=0, columnspan=3, pady=(10, 30))
@@ -2525,7 +2872,7 @@ class BankGUI(tk.Tk):
 
             tk.Label(
                 qr_win,
-                text=f"Amount: ₹{amount}",
+                text=f"Amount: {format_currency(amount)}",
                 font=("Segoe UI", 11),
                 bg="white",
                 fg="#475569"
@@ -2551,28 +2898,54 @@ class BankGUI(tk.Tk):
     # ---------- Withdraw ----------
     def show_withdraw(self):
         frame = self.make_scrollable()
-
-        self.make_section_header(frame, "💸", "Withdraw Amount")
+        self.make_section_header(frame, "🏧", "ATM Withdrawal (Simulation)")
 
         card = self.make_shadow_card(frame)
 
-        left = self.make_two_column_layout(card, right_icon="💸")
-        box = left
+        # ================= 3 COLUMN LAYOUT =================
+        card.grid_columnconfigure(0, weight=50)   # Form
+        card.grid_columnconfigure(1, weight=35)   # Summary
+        card.grid_columnconfigure(2, weight=15)   # Icon
 
-        box.grid_columnconfigure(0, weight=1)
-        box.grid_columnconfigure(1, weight=1)
+        card.grid_rowconfigure(0, weight=1)
+        card.grid_rowconfigure(1, weight=0)
+        card.grid_rowconfigure(2, weight=1)
 
+        # -------- LEFT (FORM) --------
+        form = tk.Frame(card, bg="white")
+        form.grid(row=0, column=0, sticky="nsew", padx=(40, 20), pady=30)
+
+        # -------- MIDDLE (SUMMARY) --------
+        middle = tk.Frame(card, bg="#f8fafc")
+        middle.grid(row=0, column=1, sticky="nsew", padx=20, pady=30)
+
+        # -------- RIGHT (ICON) --------
+        right = tk.Frame(card, bg="#e0ecff")
+        right.grid(row=0, column=2, sticky="nsew", padx=(10, 40), pady=30)
+
+        tk.Label(
+            right,
+            text="🏧",
+            font=("Segoe UI", 60),
+            fg="#94a3b8",
+            bg="#e0ecff"
+        ).pack(expand=True)
+
+        ROW_PAD = 12
+
+        # Account ID (Admin only)
         if self.session["role"] == "ADMIN":
-            ttk.Label(box, text="Account ID").grid(row=0, column=0, sticky="w", pady=5)
-            aid = ttk.Entry(box, width=15)
-            aid.grid(row=0, column=1, padx=10)
+            ttk.Label(form, text="Account No.").grid(row=0, column=0, sticky="w", pady=ROW_PAD)
+            aid = ttk.Entry(form, width=18)
+            aid.grid(row=0, column=1, sticky="w")
         else:
             aid = None
 
-        ttk.Label(box, text="Amount").grid(row=1, column=0, sticky="w", pady=5)
+        # Amount
+        ttk.Label(form, text="Withdrawal Amount").grid(row=1, column=0, sticky="w", pady=ROW_PAD)
 
-        amount_frame = tk.Frame(box, bg="white")
-        amount_frame.grid(row=1, column=1, sticky="w", padx=10)
+        amount_frame = tk.Frame(form, bg="white")
+        amount_frame.grid(row=1, column=1, sticky="w")
 
         tk.Label(
             amount_frame,
@@ -2582,90 +2955,344 @@ class BankGUI(tk.Tk):
             fg="#1e3a8a"
         ).pack(side="left", padx=(0, 5))
 
-        amt = ttk.Entry(amount_frame, width=13)
+        amt_var = tk.StringVar()
+        amt = ttk.Entry(amount_frame, width=22, textvariable=amt_var)
+        self.attach_rupee_formatter(amt_var)
         amt.pack(side="left")
 
+        # ATM Type
+        atm_type = tk.StringVar(value="Bank ATM")
 
-        def withdraw():
-            a = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
-            m = to_float(amt.get())
-            if a <= 0 or m <= 0:
+        ttk.Label(form, text="ATM Type").grid(row=2, column=0, sticky="w", pady=ROW_PAD)
+
+        atm_frame = tk.Frame(form, bg="white")
+        atm_frame.grid(row=2, column=1, sticky="w")
+
+        ttk.Radiobutton(atm_frame, text="Bank ATM", variable=atm_type, value="Bank ATM").pack(side="left", padx=10)
+        ttk.Radiobutton(atm_frame, text="Other Bank ATM", variable=atm_type, value="Other Bank ATM").pack(side="left", padx=10)
+
+        # Location (Optional)
+        ttk.Label(form, text="ATM Location (Optional)").grid(row=3, column=0, sticky="w", pady=ROW_PAD)
+        location = ttk.Entry(form, width=25)
+        location.grid(row=3, column=1, sticky="w")
+
+        # ================= SUMMARY =================
+        summary = tk.Frame(middle, bg="#f8fafc")
+        summary.pack(fill="x")
+
+        tk.Label(
+            summary,
+            text="📊 Withdrawal Summary",
+            font=("Segoe UI", 14, "bold"),
+            bg="#f8fafc",
+            fg="#1e3a8a"
+        ).pack(anchor="w", pady=(0, 10))
+
+        s_amount = tk.Label(summary, text="Amount: ₹0", bg="#f8fafc")
+        s_amount.pack(anchor="w")
+
+        s_type = tk.Label(summary, text="ATM Type: Bank ATM", bg="#f8fafc")
+        s_type.pack(anchor="w")
+
+        s_fee = tk.Label(summary, text="Charges: ₹0", bg="#f8fafc")
+        s_fee.pack(anchor="w")
+
+        s_balance = tk.Label(summary, text="Balance After: —", bg="#f8fafc")
+        s_balance.pack(anchor="w")
+
+        s_status = tk.Label(summary, text="Status: Ready", fg="#16a34a", bg="#f8fafc")
+        s_status.pack(anchor="w")
+
+        # Disclaimer
+        tk.Label(
+            middle,
+            text="⚠ This is a simulated ATM withdrawal.\nNo physical cash is dispensed.",
+            fg="#475569",
+            bg="#f8fafc",
+            font=("Segoe UI", 9)
+        ).pack(anchor="w", pady=(20, 0))
+
+        # ================= LIVE UPDATE =================
+        def update_summary(*args):
+            amt_val = to_float(amt_var.get())
+            acc_id = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
+            acc = models.get_account(acc_id) if acc_id else None
+
+            month = datetime.date.today().strftime("%Y-%m")
+            txs = models.get_transactions(acc_id, limit=200)
+
+            monthly_count = sum(
+                1 for t in txs
+                if t["type"] == "Withdraw" and t["created_at"].startswith(month)
+            )
+
+            fee = 0
+            if monthly_count >= FREE_ATM_WITHDRAWALS:
+                fee = ATM_CHARGE_AFTER_FREE
+
+            bal_after = acc["balance"] - amt_val - fee if acc else None
+
+            s_amount.config(text=f"Amount: {format_currency(amt_val)}")
+            s_type.config(text=f"ATM Type: {atm_type.get()}")
+            s_fee.config(text=f"Charges: ₹{fee}")
+
+            if acc and bal_after >= 0:
+                s_balance.config(text=f"Balance After: ₹{bal_after}")
+                s_status.config(text="Status: Ready", fg="#16a34a")
+            else:
+                s_balance.config(text="Balance After: —")
+                s_status.config(text="Status: Insufficient Balance", fg="#dc2626")
+
+        amt_var.trace_add("write", update_summary)
+        atm_type.trace_add("write", update_summary)
+
+        def start_withdraw_flow():
+            amt_val = to_float(amt_var.get())
+            acc_id = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
+        
+            if acc_id <= 0 or amt_val <= 0:
                 return messagebox.showerror("Error", "Valid account and amount required")
+        
+            self.ask_pin_and_proceed(
+                acc_id,
+                lambda: self.show_atm_simulation_popup(
+                    lambda: confirm(acc_id, amt_val)
+                )
+            )
+        
+        # ================= CONFIRM =================
+        def confirm(acc_id, amt_val):
+            if acc_id <= 0 or amt_val <= 0:
+                return messagebox.showerror("Error", "Valid account and amount required")
+
+            fee = 20 if atm_type.get() == "Other Bank ATM" else 0
+            total = amt_val + fee
+            # ----- DAILY LIMIT CHECK -----
+            today = datetime.date.today().isoformat()
+            txs = models.get_transactions(acc_id, limit=100)
+
+            today_withdrawn = sum(
+                t["amount"]
+                for t in txs
+                if t["type"] == "Withdraw" and t["created_at"].startswith(today)
+            )
+
+            if today_withdrawn + total > DAILY_ATM_LIMIT:
+                return messagebox.showerror(
+                    "Daily Limit Exceeded",
+                    f"Daily ATM withdrawal limit is ₹{DAILY_ATM_LIMIT}.\n"
+                    f"Already withdrawn today: ₹{today_withdrawn}"
+                )
+
+            acc = models.get_account(acc_id)
+
+            # 🔒 FINAL SAFETY CHECK
+            if acc.get("is_locked"):
+                return messagebox.showerror(
+                    "Account Locked",
+                    "This account is locked.\nWithdrawals are disabled."
+                )
+            if acc["balance"] < total:
+                return messagebox.showerror("Error", "Insufficient balance")
             try:
-                new = models.withdraw(a, m)
-                messagebox.showinfo("Success", f"Withdrawn. New balance: {new}")
+                note = f"ATM Withdrawal – {atm_type.get()} – {location.get()}"
+                new_bal = models.withdraw(acc_id, total, note=note)
+                self.show_withdraw_receipt(acc_id, amt_val, fee, new_bal)
+                amt_var.set("")
+                update_summary()
             except Exception as e:
                 messagebox.showerror("Error", str(e))
 
-        ttk.Button(
-            box,
-            text="Withdraw",
-            style="Primary.TButton",
-            command=withdraw
-        ).grid(row=3, column=1, pady=15, sticky="e")
+        confirm_btn = tk.Label(
+            card,
+            text="🏧  Withdraw",
+            font=("Segoe UI", 17, "bold"),
+            bg="#dc2626",
+            fg="white",
+            padx=70,
+            pady=20,
+            cursor="hand2"
+        )
+        confirm_btn.grid(row=1, column=0, columnspan=3, pady=(10, 30))
+
+        def start_withdraw_flow():
+            amt_val = to_float(amt_var.get())
+            acc_id = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
+
+            if acc_id <= 0 or amt_val <= 0:
+                return messagebox.showerror("Error", "Valid account and amount required")
+
+            self.ask_pin_and_proceed(
+                acc_id,
+                lambda: self.show_atm_simulation_popup(
+                    lambda: confirm(acc_id, amt_val)
+                )
+            )
+
+        confirm_btn.bind("<Button-1>", lambda e: start_withdraw_flow())
+        confirm_btn.bind("<Enter>", lambda e: confirm_btn.config(bg="#b91c1c"))
+        confirm_btn.bind("<Leave>", lambda e: confirm_btn.config(bg="#dc2626"))
+        # 🔒 Disable withdraw if locked
+        if self.session["role"] == "USER":
+            acc = models.get_account(self.session["account_id"])
+            if acc and acc.get("is_locked"):
+                confirm_btn.config(
+                    bg="#9ca3af",
+                    fg="white",
+                    cursor="arrow",
+                    text="🔒 Withdraw Disabled"
+                )
+                confirm_btn.unbind("<Button-1>")
+
+        spacer = tk.Frame(card, bg="white", height=20)
+        spacer.grid(row=2, column=0, columnspan=3, sticky="nsew")
+        # 🔒 BLOCK WITHDRAW IF ACCOUNT IS LOCKED
+        acc_id = self.session["account_id"]
+        if self.session["role"] == "USER":
+            acc = models.get_account(acc_id)
+            if acc and acc.get("is_locked"):
+                frame = self.make_scrollable()
+                self.make_section_header(frame, "🏧", "ATM Withdrawal (Simulation)")
+
+                card = self.make_shadow_card(frame)
+
+                tk.Label(
+                    card,
+                    text="🔒 Account Locked",
+                    font=("Segoe UI", 18, "bold"),
+                    fg="#dc2626",
+                    bg="white",
+                    pady=30
+                ).pack()
+
+                tk.Label(
+                    card,
+                    text=(
+                        "This account is locked due to multiple failed PIN attempts.\n\n"
+                        "Withdrawals are temporarily disabled.\n\n"
+                        "Please contact bank support or visit a branch."
+                    ),
+                    font=("Segoe UI", 11),
+                    fg="#475569",
+                    bg="white",
+                    justify="center"
+                ).pack(pady=10)
+
+                return   # ⛔ STOP loading withdraw UI
+
+        update_summary()
+
 
     # ---------- Transfer ----------
     def show_transfer(self):
         frame = self.make_scrollable()
-
-
         self.make_section_header(frame, "🔁", "Transfer Funds")
 
         card = self.make_shadow_card(frame)
 
-        left = self.make_two_column_layout(card, right_icon="🔁")
-        box = left
+        card.grid_columnconfigure(0, weight=50)
+        card.grid_columnconfigure(1, weight=35)
+        card.grid_columnconfigure(2, weight=15)
 
-        box.grid_columnconfigure(0, weight=1)
-        box.grid_columnconfigure(1, weight=1)
+        # LEFT
+        form = tk.Frame(card, bg="white")
+        form.grid(row=0, column=0, sticky="nsew", padx=40, pady=30)
 
-        labels = ["From Account ID", "To Account ID", "Amount"]
-        entries = {}
+        # MIDDLE
+        middle = tk.Frame(card, bg="#f8fafc")
+        middle.grid(row=0, column=1, sticky="nsew", padx=20, pady=30)
 
-        for i, lbl in enumerate(labels):
-            ttk.Label(box, text=lbl).grid(row=i, column=0, sticky="w", pady=5)
-            if lbl == "Amount":
-                amount_frame = tk.Frame(box, bg="white")
-                amount_frame.grid(row=i, column=1, sticky="w", padx=10)
+        # RIGHT
+        right = tk.Frame(card, bg="#e0ecff")
+        right.grid(row=0, column=2, sticky="nsew", padx=20, pady=30)
 
-                tk.Label(
-                    amount_frame,
-                    text=RUPEE,
-                    font=("Segoe UI", 12, "bold"),
-                    bg="white",
-                    fg="#1e3a8a"
-                ).pack(side="left", padx=(0, 5))
+        tk.Label(right, text="🔁", font=("Segoe UI", 60), bg="#e0ecff", fg="#94a3b8").pack(expand=True)
 
-                e = ttk.Entry(amount_frame, width=13)
-                e.pack(side="left")
-            else:
-                e = ttk.Entry(box, width=18)
-                e.grid(row=i, column=1, padx=10)
-                entries[lbl] = e
-                entries["Amount"] = e
+        ROW_PAD = 12
 
+        ttk.Label(form, text="Transfer To (Account No.)").grid(row=0, column=0, sticky="w", pady=ROW_PAD)
+        to_acc = ttk.Entry(form, width=25)
+        to_acc.grid(row=0, column=1)
 
-        def transfer():
-            f = self.session["account_id"] if self.session["role"] == "USER" else to_int(entries["From Account ID"].get())
-            t = to_int(entries["To Account ID"].get())
-            a = to_float(entries["Amount"].get())
-            if f <= 0 or t <= 0 or a <= 0:
-                return messagebox.showerror("Error", "All fields required")
-            acc = models.get_account(f)
-            if not acc:
-                return messagebox.showerror("Error", "Source account not found")
-            try:
-                new_f, new_t = models.transfer(f, t, a)
-                messagebox.showinfo("Success", f"Transfer Complete!\nFrom: {new_f}\nTo: {new_t}")
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
+        ttk.Label(form, text="IFSC Code").grid(row=1, column=0, sticky="w", pady=ROW_PAD)
+        ifsc = ttk.Entry(form, width=25)
+        ifsc.grid(row=1, column=1)
 
-        ttk.Button(
-            box,
-            text="Transfer",
-            style="Primary.TButton",
-            command=transfer
-        ).grid(row=4, column=1, pady=15, sticky="e")
+        ttk.Label(form, text="Amount").grid(row=2, column=0, sticky="w", pady=ROW_PAD)
+        amt_var = tk.StringVar()
+        amt = ttk.Entry(form, width=25, textvariable=amt_var)
+        self.attach_rupee_formatter(amt_var)
+        amt.grid(row=2, column=1)
+
+        # SUMMARY
+        tk.Label(middle, text="📊 Transfer Summary", font=("Segoe UI", 14, "bold"),
+                 bg="#f8fafc", fg="#1e3a8a").pack(anchor="w", pady=10)
+
+        s_from = tk.Label(middle, text=f"From: {self.session['account_id']}", bg="#f8fafc")
+        s_to = tk.Label(middle, text="To: —", bg="#f8fafc")
+        s_amt = tk.Label(middle, text="Amount: ₹0", bg="#f8fafc")
+        s_status = tk.Label(middle, text="Status: Ready", fg="#16a34a", bg="#f8fafc")
+
+        for lbl in (s_from, s_to, s_amt, s_status):
+            lbl.pack(anchor="w")
+
+        def update_summary(*_):
+            s_to.config(text=f"To: {to_acc.get()}")
+            s_amt.config(text=f"Amount: ₹{amt_var.get()}")
+
+        amt_var.trace_add("write", update_summary)
+        to_acc.bind("<KeyRelease>", update_summary)
+
+        def confirm_transfer():
+            f = self.session["account_id"]
+            t = to_int(to_acc.get())
+            a = to_float(amt_var.get())
+
+            if t <= 0 or a <= 0:
+                return messagebox.showerror("Error", "Enter valid details")
+            # ----- DAILY TRANSFER LIMIT CHECK -----
+            today = datetime.date.today().isoformat()
+            txs = models.get_transactions(f, limit=200)
+
+            today_transferred = sum(
+                t["amount"]
+                for t in txs
+                if t["type"] == "Transfer-Out" and t["created_at"].startswith(today)
+            )
+
+            if today_transferred + a > DAILY_TRANSFER_LIMIT:
+                return messagebox.showerror(
+                    "Daily Transfer Limit Exceeded",
+                    f"Daily transfer limit is ₹{DAILY_TRANSFER_LIMIT}.\n"
+                    f"Already transferred today: ₹{today_transferred}"
+                )
+
+            def do_transfer():
+                try:
+                    new_from_balance, _ = models.transfer(f, t, a)
+                    self.show_transfer_receipt(f, t, a, new_from_balance)
+                    amt_var.set("")
+                    to_acc.delete(0, tk.END)
+                except Exception as e:
+                    messagebox.showerror("Error", str(e))
+
+            self.ask_pin_and_proceed(f, do_transfer)
+
+        confirm_btn = tk.Label(
+            card,
+            text="🔁  Confirm Transfer",
+            font=("Segoe UI", 17, "bold"),
+            bg="#2563eb",
+            fg="white",
+            padx=70,
+            pady=20,
+            cursor="hand2"
+        )
+        confirm_btn.grid(row=1, column=0, columnspan=3, pady=20)
+
+        confirm_btn.bind("<Button-1>", lambda e: confirm_transfer())
+        confirm_btn.bind("<Enter>", lambda e: confirm_btn.config(bg="#1e3a8a"))
+        confirm_btn.bind("<Leave>", lambda e: confirm_btn.config(bg="#2563eb"))
 
     # ---------- Transactions ----------
     def show_transactions(self):
@@ -2681,14 +3308,12 @@ class BankGUI(tk.Tk):
         left = self.make_two_column_layout(card, right_icon="📊")
         box = left
 
-
-        ttk.Label(box, text="Account ID").grid(row=0, column=0, sticky="w")
+        ttk.Label(box, text="Account No.").grid(row=0, column=0, sticky="w")
         aid = ttk.Entry(box, width=14)
         aid.grid(row=0, column=1, padx=10)
         if self.session["role"] == "USER":
             aid.insert(0, self.session["account_id"])
             aid.config(state="disabled")
-
 
         ttk.Button(
             box,
@@ -2705,20 +3330,19 @@ class BankGUI(tk.Tk):
         # 🔒 NEW INNER FRAME (pack-only zone)
         table_container = tk.Frame(table_card, bg="white")
         table_container.pack(fill="both", expand=True, padx=20, pady=20)
-        
+
         cols = ("created_at", "type", "amount", "balance_after", "note")
         self.tree = ttk.Treeview(table_container, columns=cols, show="headings")
-        
+
         for c in cols:
             self.tree.heading(c, text=c.replace("_", " ").title())
             self.tree.column(c, width=150, anchor="w")
-        
+
         yscroll = ttk.Scrollbar(table_container, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=yscroll.set)
-        
+
         yscroll.pack(side="right", fill="y")
         self.tree.pack(fill="both", expand=True)
-        
 
     def load_tx(self, aid_str):
         aid = to_int(aid_str)
@@ -2733,7 +3357,6 @@ class BankGUI(tk.Tk):
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-
     # ---------- Delete Account ----------
     def show_delete(self):
         if self.session["role"] != "ADMIN":
@@ -2742,17 +3365,15 @@ class BankGUI(tk.Tk):
 
         frame = self.make_scrollable()
 
-
         self.make_section_header(frame, "❌", "Delete Account")
         card = self.make_shadow_card(frame)
 
         left = self.make_two_column_layout(card, right_icon="❌")
         box = left
-
         box.grid_columnconfigure(0, weight=1)
         box.grid_columnconfigure(1, weight=1)
 
-        ttk.Label(box, text="Account ID").grid(row=0, column=0)
+        ttk.Label(box, text="Account No.").grid(row=0, column=0)
         aid = ttk.Entry(box, width=10)
         aid.grid(row=0, column=1, padx=8)
 
@@ -2768,7 +3389,6 @@ class BankGUI(tk.Tk):
         ttk.Button(frame, text="Delete", style="Primary.TButton", command=delete)\
             .pack(anchor="e", pady=10)
         self.after(100, lambda: self.build_sidebar())
-
 
 # ---------- Run GUI ----------
 if __name__ == "__main__":
