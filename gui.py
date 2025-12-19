@@ -69,9 +69,10 @@ def to_int(val, default=0):
 
 def to_float(val, default=0.0):
     try:
-        return float(val)
-    except Exception:
+        return float(str(val).replace(",", ""))
+    except:
         return default
+
 
 # ---------- Global Currency Formatter ----------
 def format_currency(value):
@@ -693,9 +694,17 @@ class BankGUI(tk.Tk):
     def show_withdraw_receipt(self, acc_id, amount, fee, balance):
         win = tk.Toplevel(self)
         win.title("ATM Receipt")
+        win.transient(self)
+        win.grab_set()
         win.resizable(False, False)
         win.configure(bg="white")
 
+        # Center receipt
+        w, h = 360, 260
+        x = self.winfo_x() + (self.winfo_width() // 2) - (w // 2)
+        y = self.winfo_y() + (self.winfo_height() // 2) - (h // 2)
+        win.geometry(f"{w}x{h}+{x}+{y}")
+        
         tk.Label(
             win,
             text="🏧 ATM Withdrawal Receipt",
@@ -705,7 +714,7 @@ class BankGUI(tk.Tk):
 
         details = [
             f"Account ID: {acc_id}",
-            f"Amount: ₹{amount}",
+            f"Amount: {format_currency(amount)}",
             f"Charges: ₹{fee}",
             f"Date: {datetime.datetime.now().strftime('%d-%m-%Y %I:%M %p')}",
             f"Available Balance: ₹{balance}",
@@ -732,7 +741,7 @@ class BankGUI(tk.Tk):
         details = [
             f"From Account No.: {from_acc}",
             f"To Account No.: {to_acc}",
-            f"Amount Transferred: ₹{amount}",
+            f"Amount Transferred: {format_currency(amount)}",
             f"Date: {datetime.datetime.now().strftime('%d-%m-%Y %I:%M %p')}",
             f"Available Balance: ₹{balance_after}",
         ]
@@ -744,6 +753,7 @@ class BankGUI(tk.Tk):
 
 
     def show_atm_simulation_popup(self, on_continue):
+        self._atm_frames = []
         win = tk.Toplevel(self)
         win.title("ATM Withdrawal Simulation")
         win.transient(self)
@@ -786,10 +796,15 @@ class BankGUI(tk.Tk):
             lbl.pack(pady=10)
 
             def animate(i=0):
+                if not win.winfo_exists() or not self._atm_frames:
+                    return
                 lbl.config(image=self._atm_frames[i])
                 win.after(120, animate, (i + 1) % len(self._atm_frames))
-
-            animate()
+            
+            if len(self._atm_frames) > 1:
+                animate()
+            else:
+                lbl.config(image=self._atm_frames[0])
         else:
             tk.Label(
                 win,
@@ -809,13 +824,23 @@ class BankGUI(tk.Tk):
         btn_frame = tk.Frame(win, bg="white")
         btn_frame.pack(pady=10)
         # ⏱ Auto close after 2 seconds and continue
-        win.after(2000, lambda: (win.destroy(), on_continue()))
+        def safe_continue():
+            if win.winfo_exists():
+                win.destroy()
+            on_continue()
+
+        # ⏱ Auto close after 2 seconds and continue
+        win.after(2000, safe_continue)
+
+        def cancel():
+            if win.winfo_exists():
+                win.destroy()
+
         tk.Button(
             btn_frame,
             text="Cancel",
-            command=win.destroy
+            command=cancel
         ).pack(side="left", padx=10)
-
 
     def show_success_animation(self):
         win = tk.Toplevel(self)
@@ -1102,27 +1127,34 @@ class BankGUI(tk.Tk):
         pin = self.pin_var.get().strip()
         confirm = self.confirm_pin_var.get().strip()
 
-        # Reset
+        # SAFETY: widgets may already be destroyed
+        if not hasattr(self, "pin_error"):
+            return
+        if not self.pin_error.winfo_exists():
+            return
+
         self.pin_error.config(text="")
         self.confirm_error.config(text="")
         self.match_label.config(text="", fg="green")
 
-        # PIN length rule
+        if pin and not pin.isdigit():
+            self.pin_error.config(text="❗ PIN must contain only numbers")
+            return
+
         if pin and not (4 <= len(pin) <= 6):
             self.pin_error.config(text="❗ PIN must be 4–6 digits")
-        elif pin and not pin.isdigit():
-            self.pin_error.config(text="❗ PIN must contain only numbers")
+            return
 
-        # Confirm PIN checks
         if confirm and not confirm.isdigit():
             self.confirm_error.config(text="❗ Confirm PIN must contain only numbers")
+            return
 
-        # Match check (only if both valid length)
         if pin and confirm:
             if pin == confirm:
                 self.match_label.config(text="✔ PIN Matched", fg="green")
             else:
                 self.match_label.config(text="✖ PINs do not match", fg="red")
+
     
     def toggle_pin_visibility(self):
         if self.pin_visible:
@@ -1296,29 +1328,29 @@ class BankGUI(tk.Tk):
     # ---------- Personal info tab ----------
     def load_tab_personal(self):
         self.clear_tab()
-        card = self.make_card(self.tab_content)
+        container = self.tab_content
+        container.grid_columnconfigure(0, weight=0)
+        container.grid_columnconfigure(1, weight=1)
+        ROW_PAD = 8
         # Ensure dictionary exists
         if not hasattr(self, "field_widgets"):
             self.field_widgets = {}
 
-        # Row spacing value
-        ROW_PAD = 8
-
         # Full Name
-        tk.Label(card, text="Full Name").grid(row=0, column=0, sticky="w", pady=ROW_PAD)
-        full_name_entry = tk.Entry(card, width=35, textvariable=self.full_name_var, highlightthickness=2)
+        tk.Label(container, text="Full Name").grid(row=0, column=0, sticky="w", pady=ROW_PAD)
+        full_name_entry = tk.Entry(container, width=28, textvariable=self.full_name_var)
         full_name_entry.grid(row=0, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["Full Name"] = full_name_entry
 
         # Email
-        tk.Label(card, text="Email").grid(row=1, column=0, sticky="w", pady=ROW_PAD)
-        email_entry = tk.Entry(card, width=35, textvariable=self.email_var, highlightthickness=2)
+        tk.Label(container, text="Email").grid(row=1, column=0, sticky="w", pady=ROW_PAD)
+        email_entry = tk.Entry(container, width=28, textvariable=self.email_var, highlightthickness=1, highlightbackground="#d1d5db")
         email_entry.grid(row=1, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["Email"] = email_entry
 
         # Phone
-        tk.Label(card, text="Phone").grid(row=2, column=0, sticky="w", pady=ROW_PAD)
-        phone_frame = tk.Frame(card, bg="white")
+        tk.Label(container, text="Phone").grid(row=2, column=0, sticky="w", pady=ROW_PAD)
+        phone_frame = tk.Frame(container, bg="white")
         phone_frame.grid(row=2, column=1, sticky="w", padx=10, pady=ROW_PAD)
         tk.Label(
             phone_frame,
@@ -1328,16 +1360,16 @@ class BankGUI(tk.Tk):
             font=("Segoe UI", 10, "bold")
         ).pack(side="left", padx=(0, 5))
 
-        phone_entry = tk.Entry(phone_frame, width=25, textvariable=self.phone_var, validate="key",validatecommand=self.phone_validate, highlightthickness=2)
+        phone_entry = tk.Entry(phone_frame, width=25, textvariable=self.phone_var, validate="key",validatecommand=self.phone_validate, highlightthickness=1, highlightbackground="#d1d5db")
         phone_entry.pack(side="left")
         self.field_widgets["Phone Number"] = phone_entry
 
         # Date of Birth
-        tk.Label(card, text="Date of Birth (YYYY-MM-DD)").grid(
+        tk.Label(container, text="Date of Birth (YYYY-MM-DD)").grid(
             row=3, column=0, sticky="w", pady=ROW_PAD
         )
 
-        self.dob_entry_widget = tk.Entry(card, width=30, textvariable=self.dob_var,validate="key", validatecommand=(self.register(self.validate_dob), "%P"),highlightthickness=2)
+        self.dob_entry_widget = tk.Entry(container, width=30, textvariable=self.dob_var,validate="key", validatecommand=(self.register(self.validate_dob), "%P"), highlightthickness=1, highlightbackground="#d1d5db")
         self.dob_entry_widget.grid(row=3, column=1, padx=10, pady=5)
         self.field_widgets["Date of Birth"] = self.dob_entry_widget
         def update_dob_ui(*args):
@@ -1353,26 +1385,26 @@ class BankGUI(tk.Tk):
                 try:
                     dob = datetime.date(int(raw[:4]), int(raw[4:6]), int(raw[6:]))
                 except:
-                    self.dob_entry_widget.config(highlightbackground="red")
+                    self.dob_entry_widget.config(fg="#dc2626")
                     return
 
                 today = datetime.date.today()
 
                 # Future DOB
                 if dob > today:
-                    self.dob_entry_widget.config(highlightbackground="red")
+                    self.dob_entry_widget.config(fg="#dc2626")
                     messagebox.showerror("Invalid DOB", "DOB cannot be in the future.")
                     return
 
                 # Age check
                 age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
                 if age < 18:
-                    self.dob_entry_widget.config(highlightbackground="red")
+                    self.dob_entry_widget.config(fg="#dc2626")
                     messagebox.showerror("Age Error", "User must be 18+.")
                     return
 
                 # Valid DOB
-                self.dob_entry_widget.config(highlightbackground="green")
+                self.dob_entry_widget.config(fg="#16a34a")
                 self.age_label_var.set(f"Age: {age} years")
 
         # Trigger UI feedback when DOB changes
@@ -1380,14 +1412,14 @@ class BankGUI(tk.Tk):
 
         # --- Live Age Display Below DOB ---
         self.age_label_var.set("")
-        tk.Label(card, textvariable=self.age_label_var, fg="gray").grid(
+        tk.Label(container, textvariable=self.age_label_var, fg="gray").grid(
             row=4, column=1, sticky="w", padx=10
         )
 
         # Gender (Radio Buttons)
-        tk.Label(card, text="Gender").grid(row=4, column=0, sticky="w", pady=ROW_PAD)
+        tk.Label(container, text="Gender").grid(row=4, column=0, sticky="w", pady=ROW_PAD)
 
-        gender_frame = tk.Frame(card, bg="white")
+        gender_frame = tk.Frame(container, bg="white")
         gender_frame.grid(row=4, column=1, sticky="w", padx=10, pady=ROW_PAD)
 
         tk.Radiobutton(
@@ -1418,23 +1450,22 @@ class BankGUI(tk.Tk):
         self.field_widgets["Gender"] = gender_frame
 
         # ID Type
-        tk.Label(card, text="ID Document Type").grid(row=5, column=0, sticky="w", pady=ROW_PAD)
-        id_type_box = ttk.Combobox(card, values=["Aadhaar","Passport","PAN","Driving License","Other"],
-                           width=33, textvariable=self.id_type_var)
+        tk.Label(container, text="ID Document Type").grid(row=5, column=0, sticky="w", pady=ROW_PAD)
+        id_type_box = ttk.Combobox(container, values=["Aadhaar","Passport","PAN","Driving License","Other"],width=33, textvariable=self.id_type_var)
         id_type_box.grid(row=5, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["ID Document Type"] = id_type_box
 
         # Upload ID Document
-        tk.Label(card, text="Upload ID Document").grid(row=6, column=0, sticky="w", pady=ROW_PAD)
-        tk.Button(card, text="Browse…", command=self.choose_id_doc).grid(row=6, column=1, sticky="w", padx=10, pady=ROW_PAD)
-        tk.Label(card, textvariable=self.id_doc_path_var, fg="gray").grid(row=7, column=0, columnspan=2, sticky="w", padx=10)
-        self.field_widgets["ID Document Upload"] = tk.Label(card)
+        tk.Label(container, text="Upload ID Document").grid(row=6, column=0, sticky="w", pady=ROW_PAD)
+        tk.Button(container, text="Browse…", command=self.choose_id_doc).grid(row=6, column=1, sticky="w", padx=10, pady=ROW_PAD)
+        tk.Label(container, textvariable=self.id_doc_path_var, fg="gray").grid(row=7, column=0, columnspan=2, sticky="w", padx=10)
+        self.field_widgets["ID Document Upload"] = tk.Label(container)
 
         # Upload Passport Photo
-        tk.Label(card, text="Upload Passport Photo").grid(row=8, column=0, sticky="w", pady=ROW_PAD)
-        tk.Button(card, text="Browse…", command=self.choose_photo).grid(row=8, column=1, sticky="w", padx=10, pady=ROW_PAD)
-        tk.Label(card, textvariable=self.photo_path_var, fg="gray").grid(row=9, column=0, columnspan=2, sticky="w", padx=10)
-        self.field_widgets["Passport Photo Upload"] = tk.Label(card)
+        tk.Label(container, text="Upload Passport Photo").grid(row=8, column=0, sticky="w", pady=ROW_PAD)
+        tk.Button(container, text="Browse…", command=self.choose_photo).grid(row=8, column=1, sticky="w", padx=10, pady=ROW_PAD)
+        tk.Label(container, textvariable=self.photo_path_var, fg="gray").grid(row=9, column=0, columnspan=2, sticky="w", padx=10)
+        self.field_widgets["Passport Photo Upload"] = tk.Label(container)
 
     # ---------- Contact Tab ----------
     def load_tab_contact(self):
@@ -1454,40 +1485,40 @@ class BankGUI(tk.Tk):
         # Address Line 1
         tk.Label(self.tab_content, text="Address Line 1").grid(row=1, column=0, sticky="w", pady=ROW_PAD)
         
-        addr1_entry = tk.Entry(self.tab_content, width=35, textvariable=self.addr_line1_var, highlightthickness=2)
+        addr1_entry = tk.Entry(self.tab_content, width=35, textvariable=self.addr_line1_var,  highlightthickness=1, highlightbackground="#d1d5db")
         addr1_entry.grid(row=1, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["Address Line 1"] = addr1_entry
 
         # Village / Town (manual input)
         tk.Label(self.tab_content, text="Village / Town").grid(row=2, column=0, sticky="w", pady=ROW_PAD)
         
-        village_entry = tk.Entry(self.tab_content, width=35, textvariable=self.village_var, highlightthickness=2)
+        village_entry = tk.Entry(self.tab_content, width=35, textvariable=self.village_var,  highlightthickness=1, highlightbackground="#d1d5db")
         village_entry.grid(row=2, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["Village / Town"] = village_entry
 
         # Tehsil (auto-fill from API Block)
         tk.Label(self.tab_content, text="Tehsil").grid(row=4, column=0, sticky="w", pady=ROW_PAD)
         
-        tehsil_entry = tk.Entry(self.tab_content, width=35, textvariable=self.tehsil_var, state="readonly", highlightthickness=2)
+        tehsil_entry = tk.Entry(self.tab_content, width=35, textvariable=self.tehsil_var, state="readonly",  highlightthickness=1, highlightbackground="#d1d5db")
         tehsil_entry.grid(row=4, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["Tehsil"] = tehsil_entry
 
         # Postal Code / PIN Code (triggers lookup)
         tk.Label(self.tab_content, text="Postal Code / PIN Code").grid(row=3, column=0, sticky="w", pady=ROW_PAD)
-        self.postal_entry = tk.Entry(self.tab_content, width=35, textvariable=self.postal_code_var,validate="key", validatecommand=self.num_validate, highlightthickness=2)
+        self.postal_entry = tk.Entry(self.tab_content, width=35, textvariable=self.postal_code_var,validate="key", validatecommand=self.num_validate,  highlightthickness=1, highlightbackground="#d1d5db")
         self.postal_entry.grid(row=3, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["Postal Code"] = self.postal_entry
         
         # District (auto-fill)
         tk.Label(self.tab_content, text="District").grid(row=5, column=0, sticky="w", pady=ROW_PAD)
-        district_entry = tk.Entry(self.tab_content, width=35, textvariable=self.district_var, state="readonly", highlightthickness=2)
+        district_entry = tk.Entry(self.tab_content, width=35, textvariable=self.district_var, state="readonly",  highlightthickness=1, highlightbackground="#d1d5db")
         district_entry.grid(row=5, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["District"] = district_entry
 
         # State (auto-fill)
         tk.Label(self.tab_content, text="State").grid(row=6, column=0, sticky="w", pady=ROW_PAD)
         
-        state_entry = tk.Entry(self.tab_content, width=35, textvariable=self.state_var, state="readonly", highlightthickness=2)
+        state_entry = tk.Entry(self.tab_content, width=35, textvariable=self.state_var, state="readonly",  highlightthickness=1, highlightbackground="#d1d5db")
         state_entry.grid(row=6, column=1, padx=10, pady=ROW_PAD)
         self.field_widgets["State"] = state_entry
 
@@ -1713,50 +1744,19 @@ class BankGUI(tk.Tk):
     # ---------- Create Account ----------
     def show_create(self):
         self.clear_content()
+        # ✅ Use SAME layout system as other pages
+        frame = self.make_scrollable()
 
-        # --- Main Card Container ---
-        # === Scrollable Form Wrapper ===
-        canvas = tk.Canvas(self.content, bg="#f8fafc", highlightthickness=0)
-        canvas.pack(side="left", fill="both", expand=True)
+        # Section header (full width)
+        self.make_section_header(frame, "🆕", "Create New Account")
 
-        scrollbar = tk.Scrollbar(self.content, orient="vertical", command=canvas.yview)
-        scrollbar.pack(side="right", fill="y")
-
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        # Inner frame inside canvas
-    
-        scroll_frame = tk.Frame(canvas, bg="#f8fafc")
-        scroll_frame.grid_columnconfigure(0, weight=1)
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
-
-        def update_scroll_region(event=None):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-
-        scroll_frame.bind("<Configure>", update_scroll_region)
-
-        # Attach mouse wheel scroll
-        def _on_mouse_wheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-
-        canvas.bind("<MouseWheel>", _on_mouse_wheel)
-
-        # === NOW your normal form container goes inside scroll_frame ===
-                # Full-width gray shadow card that stretches edge-to-edge
-        shadow = tk.Frame(scroll_frame, bg="#d1d5db")
-        shadow.pack(side="top", padx=20, pady=20, fill="both", expand=True)
-
-        card = tk.Frame(shadow, bg="white")
-        card.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
-
-        # Allow card to expand fully inside shadow
-        shadow.grid_columnconfigure(0, weight=1)
-        shadow.grid_rowconfigure(0, weight=1)
-
-        # IMPORTANT:  now grid works correctly
+        # Full-width shadow card
+        card = self.make_shadow_card(frame)
+        # Full width grid config
         card.grid_columnconfigure(0, weight=1)
         card.grid_columnconfigure(1, weight=0)
         card.grid_rowconfigure(4, weight=1)
+
 
         # Decorative gradient panel on the right side
                 # Decorative right panel that stays on the far right
@@ -1847,21 +1847,15 @@ class BankGUI(tk.Tk):
         )
         subtitle.grid(row=3, column=0, sticky="w", padx=20, pady=(0, 10))
 
-        # This frame will show the content of selected tab
-        self.tab_content = tk.Frame(
-            card,
-            bg="white",
-            height=420   # 👈 FIXED HEIGHT FOR ALL TABS
-        )
-        self.tab_content.grid(row=4, column=0, sticky="nsew", padx=20, pady=10)
-
-        # Prevent auto-shrinking
-        self.tab_content.grid_propagate(False)
+        self.tab_content = tk.Frame(card, bg="white")
+        self.tab_content.grid(row=4, column=0, sticky="nw", padx=20, pady=10)
+        # 🔒 LOCK GRID STRUCTURE
+        self.tab_content.grid_columnconfigure(0, weight=0)  # labels
+        self.tab_content.grid_columnconfigure(1, weight=0)  # entries
         # ✅ RESET TAB STATE & FORCE FIRST LOAD
         self.active_tab_button = None
         self.set_active_tab("Personal Info")
         self.load_tab_personal()
-        
 
     def highlight_error(self, field_name):
         """Highlights a missing required field in RED."""
@@ -2261,6 +2255,65 @@ class BankGUI(tk.Tk):
             "Security": self.load_view_security,
             "Chart (30 Days)": self.load_view_chart,
         }
+        edit_btn = None   # 🔒 define first
+
+        if self.session["role"] == "ADMIN":
+            edit_btn = tk.Label(
+                actions,
+                text="Edit Balance",
+                font=("Segoe UI", 12, "bold"),
+                bg="#f57c0b",
+                fg="white",
+                padx=26,
+                pady=10,
+                cursor="hand2"
+            )
+            edit_btn.pack(side="left", padx=10)
+
+            def edit_balance():
+                popup = tk.Toplevel(self)
+                popup.title("Edit Account Balance")
+                popup.transient(self)
+                popup.grab_set()
+                popup.resizable(False, False)
+
+                tk.Label(
+                    popup,
+                    text=f"Account: {acc['account_id']}",
+                    font=("Segoe UI", 12, "bold")
+                ).pack(pady=10)
+
+                tk.Label(popup, text="New Balance (₹)").pack()
+                bal_var = tk.StringVar(value=str(acc["balance"]))
+                entry = tk.Entry(popup, textvariable=bal_var)
+                entry.pack(pady=5)
+
+                def save():
+                    try:
+                        new_bal = to_float(bal_var.get())
+                        if new_bal < 0:
+                            raise ValueError
+
+                        if not messagebox.askyesno(
+                            "Confirm",
+                            f"Set balance to ₹{new_bal}?"
+                        ):
+                            return
+
+                        models.admin_set_balance(acc["account_id"], new_bal)
+                        messagebox.showinfo("Success", "Balance updated successfully")
+                        popup.destroy()
+                        self.show_view()
+
+                    except:
+                        messagebox.showerror("Error", "Invalid amount")
+
+                tk.Button(popup, text="Save", command=save).pack(pady=10)
+
+            # 🔗 bind ONLY if exists
+            edit_btn.bind("<Button-1>", lambda e: edit_balance())
+            edit_btn.bind("<Enter>", lambda e: edit_btn.config(bg="#d97706"))
+            edit_btn.bind("<Leave>", lambda e: edit_btn.config(bg="#f59e0b"))
 
         for name, cmd in view_tabs.items():
             btn = tk.Label(
@@ -2299,13 +2352,24 @@ class BankGUI(tk.Tk):
         f = self.view_tab_content
         acc = self.current_account
 
+        card = tk.Frame(f, bg="#eef6ff", padx=20, pady=20)
+        card.pack(fill="x", pady=10)
+
         tk.Label(
-            f,
-            text=f"Balance: ₹{acc['balance']}",
-            font=("Segoe UI", 18, "bold"),
-            bg="white",
+            card,
+            text="Available Balance",
+            font=("Segoe UI", 11),
+            bg="#eef6ff",
+            fg="#475569"
+        ).pack(anchor="w")
+
+        tk.Label(
+            card,
+            text=format_currency(acc["balance"]),
+            font=("Segoe UI", 22, "bold"),
+            bg="#eef6ff",
             fg="#1e3a8a"
-        ).pack(anchor="w", pady=10)
+        ).pack(anchor="w")
 
         canvas = tk.Canvas(f, height=70, bg="white", highlightthickness=0)
         canvas.pack(fill="x")
@@ -2431,16 +2495,23 @@ class BankGUI(tk.Tk):
         txs = models.get_transactions(acc["account_id"], limit=20)
 
         for t in txs:
-            debit = t["amount"] if t["type"] in ("Withdraw", "Transfer-Out") else ""
-            credit = t["amount"] if t["type"] in ("Deposit", "Transfer-In") else ""
+            debit = ""
+            credit = ""
+
+            if t["type"] in ("Withdraw", "Transfer-Out"):
+                debit = format_currency(t["amount"])
+
+            if t["type"] in ("Deposit", "Transfer-In"):
+                credit = format_currency(t["amount"])
 
             tree.insert("", "end", values=(
                 t["created_at"][:16],
                 t.get("note") or t["type"],
                 debit,
                 credit,
-                t["balance_after"]
+                format_currency(t["balance_after"])
             ))
+
 
     def load_view_chart(self):
         f = self.view_tab_content
@@ -2774,7 +2845,7 @@ class BankGUI(tk.Tk):
             ).pack(side="left", padx=10)
 
         # ================= CONFIRM BUTTON =================
-        def confirm():
+        def confirm_deposit():
             amount = to_float(amt.get())
             acc = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
 
@@ -2791,7 +2862,7 @@ class BankGUI(tk.Tk):
                         note = f"QR Deposit Ref: {getattr(self, 'qr_reference', '')}"
 
                     new = models.deposit(acc, amount, note=note)
-                    messagebox.showinfo("Success", f"₹{amount} deposited\nNew Balance: ₹{new}")
+                    messagebox.showinfo("Success", f"{format_currency(amount)} deposited\nNew Balance: ₹{new}")
                     amt.delete(0, tk.END)
                     self.deposit_upi_verified = False
                     update_ui()
@@ -2811,7 +2882,7 @@ class BankGUI(tk.Tk):
             cursor="hand2"
         )
         confirm_btn.grid(row=1, column=0, columnspan=3, pady=(10, 30))
-        confirm_btn.bind("<Button-1>", lambda e: confirm())
+        confirm_btn.bind("<Button-1>", lambda e: confirm_deposit())
         confirm_btn.bind("<Enter>", lambda e: confirm_btn.config(bg="#15803d"))
         confirm_btn.bind("<Leave>", lambda e: confirm_btn.config(bg="#16a34a"))
 
@@ -3014,7 +3085,7 @@ class BankGUI(tk.Tk):
 
         # ================= LIVE UPDATE =================
         def update_summary(*args):
-            amt_val = to_float(amt_var.get())
+            amt_val = to_float(amt_var.get().replace(",", ""))
             acc_id = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
             acc = models.get_account(acc_id) if acc_id else None
 
@@ -3046,26 +3117,18 @@ class BankGUI(tk.Tk):
         amt_var.trace_add("write", update_summary)
         atm_type.trace_add("write", update_summary)
 
-        def start_withdraw_flow():
-            amt_val = to_float(amt_var.get())
-            acc_id = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
-        
-            if acc_id <= 0 or amt_val <= 0:
-                return messagebox.showerror("Error", "Valid account and amount required")
-        
-            self.ask_pin_and_proceed(
-                acc_id,
-                lambda: self.show_atm_simulation_popup(
-                    lambda: confirm(acc_id, amt_val)
-                )
-            )
-        
         # ================= CONFIRM =================
-        def confirm(acc_id, amt_val):
-            if acc_id <= 0 or amt_val <= 0:
-                return messagebox.showerror("Error", "Valid account and amount required")
+        def confirm_withdraw(acc_id, amt_val):
+            month = datetime.date.today().strftime("%Y-%m")
+            txs = models.get_transactions(acc_id, limit=200)
 
-            fee = 20 if atm_type.get() == "Other Bank ATM" else 0
+            monthly_count = sum(
+                1 for t in txs
+                if t["type"] == "Withdraw" and t["created_at"].startswith(month)
+            )
+
+            fee = ATM_CHARGE_AFTER_FREE if monthly_count >= FREE_ATM_WITHDRAWALS else 0
+
             total = amt_val + fee
             # ----- DAILY LIMIT CHECK -----
             today = datetime.date.today().isoformat()
@@ -3077,7 +3140,7 @@ class BankGUI(tk.Tk):
                 if t["type"] == "Withdraw" and t["created_at"].startswith(today)
             )
 
-            if today_withdrawn + total > DAILY_ATM_LIMIT:
+            if today_withdrawn + amt_val > DAILY_ATM_LIMIT:
                 return messagebox.showerror(
                     "Daily Limit Exceeded",
                     f"Daily ATM withdrawal limit is ₹{DAILY_ATM_LIMIT}.\n"
@@ -3116,19 +3179,27 @@ class BankGUI(tk.Tk):
         confirm_btn.grid(row=1, column=0, columnspan=3, pady=(10, 30))
 
         def start_withdraw_flow():
-            amt_val = to_float(amt_var.get())
+            amt_val = to_float(amt_var.get().replace(",", ""))
             acc_id = self.session["account_id"] if self.session["role"] == "USER" else to_int(aid.get())
 
             if acc_id <= 0 or amt_val <= 0:
                 return messagebox.showerror("Error", "Valid account and amount required")
+            if withdraw_in_progress["flag"]:
+                return
+            withdraw_in_progress["flag"] = True
 
-            self.ask_pin_and_proceed(
-                acc_id,
-                lambda: self.show_atm_simulation_popup(
-                    lambda: confirm(acc_id, amt_val)
-                )
-            )
+            def after_pin():
+                # ✅ ALWAYS show ATM animation
+                self.show_atm_simulation_popup(after_animation)
 
+            def after_animation():
+                # ✅ ALWAYS execute withdrawal + receipt
+                withdraw_in_progress["flag"] = False
+                confirm_withdraw(acc_id, amt_val)
+
+            # 🔐 STEP 1: PIN
+            self.ask_pin_and_proceed(acc_id, after_pin)
+        withdraw_in_progress = {"flag": False}
         confirm_btn.bind("<Button-1>", lambda e: start_withdraw_flow())
         confirm_btn.bind("<Enter>", lambda e: confirm_btn.config(bg="#b91c1c"))
         confirm_btn.bind("<Leave>", lambda e: confirm_btn.config(bg="#dc2626"))
@@ -3219,10 +3290,21 @@ class BankGUI(tk.Tk):
         ifsc.grid(row=1, column=1)
 
         ttk.Label(form, text="Amount").grid(row=2, column=0, sticky="w", pady=ROW_PAD)
+        amount_frame = tk.Frame(form, bg="white")
+        amount_frame.grid(row=2, column=1, sticky="w")
+
+        tk.Label(
+            amount_frame,
+            text="₹",
+            font=("Segoe UI", 12, "bold"),
+            bg="white",
+            fg="#1e3a8a"
+        ).pack(side="left", padx=(0, 5))
+
         amt_var = tk.StringVar()
-        amt = ttk.Entry(form, width=25, textvariable=amt_var)
+        amt = ttk.Entry(amount_frame, width=22, textvariable=amt_var)
         self.attach_rupee_formatter(amt_var)
-        amt.grid(row=2, column=1)
+        amt.pack(side="left")
 
         # SUMMARY
         tk.Label(middle, text="📊 Transfer Summary", font=("Segoe UI", 14, "bold"),
@@ -3315,23 +3397,49 @@ class BankGUI(tk.Tk):
             aid.insert(0, self.session["account_id"])
             aid.config(state="disabled")
 
-        ttk.Button(
+        load_btn = tk.Label(
             box,
-            text="Load",
-            style="Primary.TButton",
-            command=lambda: self.load_tx(
-            self.session["account_id"] if self.session["role"] == "USER" else aid.get()
+            text="📥  Load Transactions",
+            font=("Segoe UI", 12, "bold"),
+            bg="#2563eb",
+            fg="white",
+            padx=30,
+            pady=12,
+            cursor="hand2"
         )
-        ).grid(row=0, column=2, padx=10)
+        load_btn.grid(row=0, column=2, padx=20)
 
-        # --- TABLE AREA (INSIDE SAME CARD STYLE) ---
-        table_card = self.make_shadow_card(frame)
+        load_btn.bind("<Enter>", lambda e: load_btn.config(bg="#1e3a8a"))
+        load_btn.bind("<Leave>", lambda e: load_btn.config(bg="#2563eb"))
+        load_btn.bind(
+            "<Button-1>",
+            lambda e: self.load_tx(
+                self.session["account_id"] if self.session["role"] == "USER" else aid.get()
+            )
+        )
 
-        # 🔒 NEW INNER FRAME (pack-only zone)
+        # --- TABLE PLACEHOLDER (hidden initially) ---
+        self.tx_table_holder = tk.Frame(frame, bg="#f8fafc")
+        self.tx_table_holder.pack_forget()   # 👈 hidden until Load clicked
+
+    def load_tx(self, aid_str):
+        aid = to_int(aid_str)
+        if aid <= 0:
+            return messagebox.showerror("Error", "Enter valid account ID")
+
+        # 🔁 Clear previous table (if any)
+        for w in self.tx_table_holder.winfo_children():
+            w.destroy()
+
+        # 📦 SHOW TABLE HOLDER NOW
+        self.tx_table_holder.pack(fill="both", expand=True, padx=20, pady=20)
+
+        table_card = self.make_shadow_card(self.tx_table_holder)
+
         table_container = tk.Frame(table_card, bg="white")
         table_container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        cols = ("created_at", "type", "amount", "balance_after", "note")
+        cols = ("created_at", "type", "debit", "credit", "balance", "note")
         self.tree = ttk.Treeview(table_container, columns=cols, show="headings")
 
         for c in cols:
@@ -3344,16 +3452,28 @@ class BankGUI(tk.Tk):
         yscroll.pack(side="right", fill="y")
         self.tree.pack(fill="both", expand=True)
 
-    def load_tx(self, aid_str):
-        aid = to_int(aid_str)
-        if aid <= 0:
-            return messagebox.showerror("Error", "Enter valid account ID")
         try:
             txs = models.get_transactions(aid, limit=100)
-            for r in self.tree.get_children():
-                self.tree.delete(r)
+
             for t in txs:
-                self.tree.insert("", tk.END, values=(t["created_at"], t["type"], t["amount"], t["balance_after"], t.get("note", "")))
+                debit = ""
+                credit = ""
+
+                if t["type"] in ("Withdraw", "Transfer-Out"):
+                    debit = format_currency(t["amount"])
+
+                if t["type"] in ("Deposit", "Transfer-In"):
+                    credit = format_currency(t["amount"])
+
+                self.tree.insert("", "end", values=(
+                    t["created_at"],
+                    t["type"],
+                    debit,
+                    credit,
+                    format_currency(t["balance_after"]),
+                    t.get("note", "")
+                ))
+
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -3362,33 +3482,99 @@ class BankGUI(tk.Tk):
         if self.session["role"] != "ADMIN":
             messagebox.showerror("Access Denied", "Admin access required.")
             return
-
+    
         frame = self.make_scrollable()
-
+    
+        # Header
         self.make_section_header(frame, "❌", "Delete Account")
+    
+        # Main card
         card = self.make_shadow_card(frame)
-
-        left = self.make_two_column_layout(card, right_icon="❌")
-        box = left
-        box.grid_columnconfigure(0, weight=1)
-        box.grid_columnconfigure(1, weight=1)
-
-        ttk.Label(box, text="Account No.").grid(row=0, column=0)
-        aid = ttk.Entry(box, width=10)
-        aid.grid(row=0, column=1, padx=8)
-
-        def delete():
-            a = to_int(aid.get())
-            if a <= 0:
-                return messagebox.showerror("Error", "Valid Account ID required")
-
-            acc = models.get_account(a)
+    
+        # ----- GRID SETUP -----
+        card.grid_columnconfigure(0, weight=1)
+        card.grid_columnconfigure(1, weight=0)
+    
+        # ----- LEFT FORM AREA -----
+        form = tk.Frame(card, bg="white")
+        form.grid(row=0, column=0, sticky="nw", padx=40, pady=30)
+    
+        form.grid_columnconfigure(0, weight=0)
+        form.grid_columnconfigure(1, weight=0)
+    
+        tk.Label(
+            form,
+            text="Account No.",
+            font=("Segoe UI", 11, "bold"),
+            bg="white"
+        ).grid(row=0, column=0, sticky="w", pady=10)
+    
+        acc_var = tk.StringVar()
+        acc_entry = tk.Entry(
+            form,
+            width=25,
+            textvariable=acc_var,
+            highlightthickness=1,
+            highlightbackground="#d1d5db"
+        )
+        acc_entry.grid(row=0, column=1, padx=(10, 0), pady=10)
+        acc_entry.focus()
+    
+        # ----- DELETE BUTTON -----
+        delete_btn = tk.Label(
+            form,
+            text="❌  Delete Account",
+            font=("Segoe UI", 14, "bold"),
+            bg="#dc2626",
+            fg="white",
+            padx=40,
+            pady=14,
+            cursor="hand2"
+        )
+        delete_btn.grid(row=1, column=0, columnspan=2, pady=(25, 10), sticky="w")
+    
+        delete_btn.bind("<Enter>", lambda e: delete_btn.config(bg="#b91c1c"))
+        delete_btn.bind("<Leave>", lambda e: delete_btn.config(bg="#dc2626"))
+    
+        # ----- RIGHT ICON PANEL -----
+        right = tk.Frame(card, bg="#e0ecff", width=140)
+        right.grid(row=0, column=1, sticky="ns", padx=(0, 40), pady=30)
+        right.grid_propagate(False)
+    
+        tk.Label(
+            right,
+            text="❌",
+            font=("Segoe UI", 60),
+            fg="#94a3b8",
+            bg="#e0ecff"
+        ).pack(expand=True)
+    
+        # ----- DELETE LOGIC -----
+        def delete_account():
+            aid = to_int(acc_var.get())
+    
+            if aid <= 0:
+                return messagebox.showerror("Invalid Input", "Enter a valid Account Number")
+    
+            acc = models.get_account(aid)
             if not acc:
-                return messagebox.showerror("Error", "Account not found")
-
-        ttk.Button(frame, text="Delete", style="Primary.TButton", command=delete)\
-            .pack(anchor="e", pady=10)
-        self.after(100, lambda: self.build_sidebar())
+                return messagebox.showerror("Not Found", "Account does not exist")
+    
+            if not messagebox.askyesno(
+                "⚠ Confirm Deletion",
+                f"This action is PERMANENT.\n\nDelete account {aid}?"
+            ):
+                return
+    
+            try:
+                models.delete_account(aid)
+                messagebox.showinfo("Deleted", f"Account {aid} deleted successfully")
+                acc_var.set("")
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+    
+        delete_btn.bind("<Button-1>", lambda e: delete_account())
+    
 
 # ---------- Run GUI ----------
 if __name__ == "__main__":
