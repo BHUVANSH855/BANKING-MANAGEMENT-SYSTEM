@@ -12,6 +12,7 @@ from utils import verify_pin
 from live_pincode_lookup import lookup_pin
 import re
 import winsound
+import requests
 
 UPI_REGEX = re.compile(r"^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$")
 DAILY_ATM_LIMIT = 25000
@@ -20,6 +21,8 @@ RUPEE = "₹"
 FREE_ATM_WITHDRAWALS = 3
 ATM_CHARGE_AFTER_FREE = 20
 DAILY_TRANSFER_LIMIT = 50000
+MONTHLY_MAINTENANCE_CHARGE = 30
+MONTHLY_SMS_CHARGE = 25
 THEMES = {
     "light": {
         "bg": "#f8fafc",
@@ -56,6 +59,141 @@ SUPPORTED_IMAGE_EXTS = (
     ".jpg", ".jpeg", ".png", ".bmp",
     ".tiff", ".webp", ".gif", ".ico"
 )
+# ---------- Notification System (Email + SMS Simulation) ----------
+
+def send_email(to_email, subject, body):
+    """
+    REAL INSTANT EMAIL using Gmail SMTP
+    """
+
+    if not to_email:
+        return
+
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 587
+    EMAIL_ID = "yourbankemail@gmail.com"
+    EMAIL_PASSWORD = "ekmvwfljrajgycrx"
+
+    msg = MIMEMultipart()
+    msg["From"] = EMAIL_ID
+    msg["To"] = to_email
+    msg["Subject"] = subject
+
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(EMAIL_ID, EMAIL_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        print("❌ EMAIL FAILED:", e)
+
+def send_sms(to_phone, message):
+    """
+    REAL INSTANT SMS using Fast2SMS
+    Delivery time: ~1–3 seconds
+    """
+
+    if not to_phone:
+        return
+
+    phone = str(to_phone).strip()
+    if phone.startswith("+91"):
+        phone = phone.replace("+91", "")
+    if not phone.isdigit() or len(phone) != 10:
+        return
+
+    url = "https://www.fast2sms.com/dev/bulkV2"
+
+    payload = {
+        "route": "q",
+        "message": message,
+        "language": "english",
+        "numbers": phone,
+    }
+
+    headers = {
+        "authorization": "RNcAqSnWLQbKJXdhePrtikYp5Da3G6Tgxv8MmOl9fV1jHsBw24TYROG84JCtoxvm2QDBflV0HU37jcNy",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=5)
+        response.raise_for_status()
+    except Exception as e:
+        print("❌ SMS FAILED:", e)
+
+
+def notify_user(acc, event, **kwargs):
+    """
+    Central notification dispatcher
+    """
+    email = acc.get("email")
+    phone = acc.get("phone")
+
+    messages = {
+        "ACCOUNT_CREATED": (
+            "Account Created",
+            f"Dear {acc['name']}, your Bank A/c {acc['account_id']} has been successfully opened. "
+            f"Available Balance: ₹{acc['balance']}. Thank you for banking with us."
+        ),
+
+        "DEPOSIT": (
+            "Deposit Alert",
+            f"₹{kwargs['amount']} credited to A/c {acc['account_id']}. "
+            f"Avl Bal: ₹{kwargs['balance']}. If not you, contact bank immediately."
+        ),
+
+        "WITHDRAW": (
+            "Withdrawal Alert",
+            f"₹{kwargs['amount']} debited from A/c {acc['account_id']}. "
+            f"Avl Bal: ₹{kwargs['balance']}. Txn Time: {datetime.datetime.now().strftime('%d-%m-%Y %I:%M %p')}"
+        ),
+
+        "TRANSFER": (
+            "Transfer Alert",
+            f"₹{kwargs['amount']} transferred from A/c {acc['account_id']}. "
+            f"Avl Bal: ₹{kwargs['balance']}."
+        ),
+
+        "PIN_CHANGED": (
+            "Security Alert",
+            f"Your ATM/Debit PIN for A/c {acc['account_id']} was changed successfully. "
+            f"If not you, contact bank immediately."
+        ),
+
+        "ACCOUNT_DELETED": (
+            "Account Closed",
+            f"Your Bank A/c {acc['account_id']} has been permanently closed. "
+            f"Thank you for banking with us."
+        ),
+        "ACCOUNT_LOCKED": (
+            "Security Alert",
+            f"Your Bank A/c {acc['account_id']} has been temporarily locked due to multiple wrong PIN attempts. "
+            f"Please contact bank support."
+        ),
+    }
+
+
+    if event not in messages:
+        return
+
+    subject, text = messages[event]
+
+    # Send Email (optional)
+    if email:
+        send_email(email, subject, text)
+    
+    # Send SMS ONLY if phone exists and role is USER
+    if phone and acc.get("account_id"):
+        send_sms(phone, text)
+    
 
 def theme_color(self, key):
     return self.theme.get(key, "#ffffff")
@@ -73,6 +211,39 @@ def to_float(val, default=0.0):
     except:
         return default
 
+def apply_monthly_charges(acc_id):
+    """
+    Deduct monthly maintenance + SMS charges once per month
+    """
+    acc = models.get_account(acc_id)
+    if not acc:
+        return
+
+    month = datetime.date.today().strftime("%Y-%m")
+
+    txs = models.get_transactions(acc_id, limit=200)
+
+    already_deducted = any(
+        "Monthly Maintenance" in (t.get("note") or "")
+        and t["created_at"].startswith(month)
+        for t in txs
+    )
+
+    if already_deducted:
+        return  # ✅ Already charged this month
+
+    total = MONTHLY_MAINTENANCE_CHARGE + MONTHLY_SMS_CHARGE
+
+    if acc["balance"] < total:
+        return  # no negative balance auto-deduction
+
+    note = "Monthly Maintenance + SMS Charges"
+
+    models.withdraw(
+        acc_id,
+        total,
+        note=note,
+    )
 
 # ---------- Global Currency Formatter ----------
 def format_currency(value):
@@ -132,7 +303,6 @@ class LoginGUI(tk.Tk):
         self.acc_label.pack()
         self.acc = tk.Entry(self)
         self.acc.pack()
-
         self.pin_label = tk.Label(self, text="PIN / Password")
         self.pin_label.pack(pady=(10, 0))
         self.pin = tk.Entry(self, show="*")
@@ -160,10 +330,8 @@ class LoginGUI(tk.Tk):
             app.session["account_id"] = "ADMIN"
             app.session["role"] = "ADMIN"
             app.build_sidebar()
-
             app.welcome_label.config(text="👋 Welcome, Bank Admin")
             app.after(300, lambda: app.show_welcome_popup("Bank Admin"))
-
             app.mainloop()
             return
 
@@ -186,10 +354,15 @@ class LoginGUI(tk.Tk):
         # 🔑 VERIFY PIN
         if not verify_pin(password, acc["pin_hash"]):
             models.register_failed_attempt(aid)
+            if acc.get("is_locked"):
+                notify_user(acc, "ACCOUNT_LOCKED")
             return messagebox.showerror("Login Failed", "Invalid PIN")
 
         # ✅ SUCCESS
         models.reset_failed_attempts(aid)
+
+        # Apply monthly charges silently
+        apply_monthly_charges(aid)
 
         self.destroy()
 
@@ -2012,6 +2185,8 @@ class BankGUI(tk.Tk):
                 f"🎉 Your account has been created successfully!\n\nYour Account ID is:\n\n   {acc_id}\n\nPlease save it safely."
             )
             self.show_success_animation()
+            acc = models.get_account(acc_id)
+            notify_user(acc, "ACCOUNT_CREATED")
             self.save_account_pdf(acc_id)
             # AUTO-LOGIN USER
             self.session["account_id"] = acc_id
@@ -2289,25 +2464,32 @@ class BankGUI(tk.Tk):
                 entry.pack(pady=5)
 
                 def save():
-                    try:
-                        new_bal = to_float(bal_var.get())
-                        if new_bal < 0:
-                            raise ValueError
+                    raw = bal_var.get().strip().replace(",", "")
 
-                        if not messagebox.askyesno(
-                            "Confirm",
-                            f"Set balance to ₹{new_bal}?"
-                        ):
-                            return
+                    if not raw.isdigit():
+                        return messagebox.showerror(
+                            "Invalid Amount",
+                            "Balance must be a valid number."
+                        )
 
-                        models.admin_set_balance(acc["account_id"], new_bal)
-                        messagebox.showinfo("Success", "Balance updated successfully")
-                        popup.destroy()
-                        self.show_view()
+                    new_bal = float(raw)
 
-                    except:
-                        messagebox.showerror("Error", "Invalid amount")
+                    if new_bal < 0:
+                        return messagebox.showerror(
+                            "Invalid Amount",
+                            "Balance cannot be negative."
+                        )
 
+                    if not messagebox.askyesno(
+                        "Confirm",
+                        f"Set balance to ₹{new_bal}?"
+                    ):
+                        return
+
+                    models.admin_set_balance(acc["account_id"], new_bal)
+                    messagebox.showinfo("Success", "Balance updated successfully")
+                    popup.destroy()
+                    self.show_view()
                 tk.Button(popup, text="Save", command=save).pack(pady=10)
 
             # 🔗 bind ONLY if exists
@@ -2383,20 +2565,17 @@ class BankGUI(tk.Tk):
         for k in ["name", "email", "phone", "dob", "gender"]:
             tk.Label(f, text=f"{k.title()}: {acc.get(k,'')}", bg="white").pack(anchor="w", pady=3)
 
-
     def load_view_address(self):
         f = self.view_tab_content
         acc = self.current_account
         for k in ["addr_line1", "village", "tehsil", "district", "state", "postal_code"]:
             tk.Label(f, text=f"{k.replace('_',' ').title()}: {acc.get(k,'')}", bg="white").pack(anchor="w", pady=3)
 
-
     def load_view_account(self):
         f = self.view_tab_content
         acc = self.current_account
         for k in ["account_id", "account_type", "created_at", "balance"]:
             tk.Label(f, text=f"{k.replace('_',' ').title()}: {acc.get(k,'')}", bg="white").pack(anchor="w", pady=3)
-
 
     def load_view_documents(self):
         f = self.view_tab_content
@@ -2563,6 +2742,7 @@ class BankGUI(tk.Tk):
                 return
 
             models.update_pin(acc["account_id"], new.get())
+            notify_user(acc, "PIN_CHANGED")
             messagebox.showinfo("Success", "PIN updated successfully")
 
         update_btn = tk.Label(
@@ -2862,6 +3042,8 @@ class BankGUI(tk.Tk):
                         note = f"QR Deposit Ref: {getattr(self, 'qr_reference', '')}"
 
                     new = models.deposit(acc, amount, note=note)
+                    acc_data = models.get_account(acc)
+                    notify_user(acc_data, "DEPOSIT", amount=amount, balance=new)
                     messagebox.showinfo("Success", f"{format_currency(amount)} deposited\nNew Balance: ₹{new}")
                     amt.delete(0, tk.END)
                     self.deposit_upi_verified = False
@@ -3160,6 +3342,8 @@ class BankGUI(tk.Tk):
             try:
                 note = f"ATM Withdrawal – {atm_type.get()} – {location.get()}"
                 new_bal = models.withdraw(acc_id, total, note=note)
+                acc_data = models.get_account(acc_id)
+                notify_user(acc_data, "WITHDRAW", amount=amt_val, balance=new_bal)
                 self.show_withdraw_receipt(acc_id, amt_val, fee, new_bal)
                 amt_var.set("")
                 update_summary()
@@ -3352,6 +3536,8 @@ class BankGUI(tk.Tk):
             def do_transfer():
                 try:
                     new_from_balance, _ = models.transfer(f, t, a)
+                    acc_data = models.get_account(f)
+                    notify_user(acc_data, "TRANSFER", amount=a, balance=new_from_balance)
                     self.show_transfer_receipt(f, t, a, new_from_balance)
                     amt_var.set("")
                     to_acc.delete(0, tk.END)
@@ -3482,33 +3668,31 @@ class BankGUI(tk.Tk):
         if self.session["role"] != "ADMIN":
             messagebox.showerror("Access Denied", "Admin access required.")
             return
-    
+
         frame = self.make_scrollable()
-    
+
         # Header
         self.make_section_header(frame, "❌", "Delete Account")
-    
+
         # Main card
         card = self.make_shadow_card(frame)
-    
-        # ----- GRID SETUP -----
-        card.grid_columnconfigure(0, weight=1)
-        card.grid_columnconfigure(1, weight=0)
-    
-        # ----- LEFT FORM AREA -----
+
+        # ===== GRID LAYOUT =====
+        card.grid_columnconfigure(0, weight=55)   # left form
+        card.grid_columnconfigure(1, weight=45)   # right summary
+        card.grid_rowconfigure(0, weight=1)
+
+        # ================= LEFT : FORM =================
         form = tk.Frame(card, bg="white")
         form.grid(row=0, column=0, sticky="nw", padx=40, pady=30)
-    
-        form.grid_columnconfigure(0, weight=0)
-        form.grid_columnconfigure(1, weight=0)
-    
+
         tk.Label(
             form,
             text="Account No.",
             font=("Segoe UI", 11, "bold"),
             bg="white"
-        ).grid(row=0, column=0, sticky="w", pady=10)
-    
+        ).grid(row=0, column=0, sticky="w", pady=12)
+
         acc_var = tk.StringVar()
         acc_entry = tk.Entry(
             form,
@@ -3517,64 +3701,123 @@ class BankGUI(tk.Tk):
             highlightthickness=1,
             highlightbackground="#d1d5db"
         )
-        acc_entry.grid(row=0, column=1, padx=(10, 0), pady=10)
+        acc_entry.grid(row=0, column=1, padx=10, pady=12)
         acc_entry.focus()
-    
-        # ----- DELETE BUTTON -----
+
+        # DELETE BUTTON
         delete_btn = tk.Label(
             form,
             text="❌  Delete Account",
-            font=("Segoe UI", 14, "bold"),
+            font=("Segoe UI", 15, "bold"),
             bg="#dc2626",
             fg="white",
-            padx=40,
-            pady=14,
+            padx=50,
+            pady=18,
             cursor="hand2"
         )
-        delete_btn.grid(row=1, column=0, columnspan=2, pady=(25, 10), sticky="w")
-    
+        delete_btn.grid(row=1, column=0, columnspan=2, pady=(30, 10), sticky="w")
+
         delete_btn.bind("<Enter>", lambda e: delete_btn.config(bg="#b91c1c"))
         delete_btn.bind("<Leave>", lambda e: delete_btn.config(bg="#dc2626"))
-    
-        # ----- RIGHT ICON PANEL -----
-        right = tk.Frame(card, bg="#e0ecff", width=140)
-        right.grid(row=0, column=1, sticky="ns", padx=(0, 40), pady=30)
-        right.grid_propagate(False)
-    
+
+        # ================= RIGHT : SUMMARY CARD =================
+        summary_wrap = tk.Frame(card, bg="#f8fafc")
+        summary_wrap.grid(row=0, column=1, sticky="nsew", padx=(10, 40), pady=30)
+
+        summary = tk.Frame(
+            summary_wrap,
+            bg="#eef6ff",
+            padx=25,
+            pady=25,
+            bd=1,
+            relief="solid"
+        )
+        summary.pack(fill="both", expand=True)
+
         tk.Label(
-            right,
-            text="❌",
-            font=("Segoe UI", 60),
-            fg="#94a3b8",
-            bg="#e0ecff"
-        ).pack(expand=True)
-    
-        # ----- DELETE LOGIC -----
+            summary,
+            text="📄 Account Summary",
+            font=("Segoe UI", 15, "bold"),
+            bg="#eef6ff",
+            fg="#1e3a8a"
+        ).pack(anchor="w", pady=(0, 15))
+
+        fields = {}
+        def row(label):
+            f = tk.Frame(summary, bg="#eef6ff")
+            f.pack(anchor="w", pady=4)
+            tk.Label(f, text=label + " :", width=14, anchor="w",
+                     bg="#eef6ff", fg="#475569").pack(side="left")
+            v = tk.Label(f, text="—", bg="#eef6ff",
+                         font=("Segoe UI", 10, "bold"))
+            v.pack(side="left")
+            fields[label] = v
+
+        for lbl in ("Name", "Account No", "Type", "Balance", "Status", "Created On"):
+            row(lbl)
+
+        # ================= SUMMARY UPDATE =================
+        def update_summary(*_):
+            aid = to_int(acc_var.get())
+            if aid <= 0:
+                for v in fields.values():
+                    v.config(text="—", fg="#1e293b")
+                return
+
+            acc = models.get_account(aid)
+            if not acc:
+                for v in fields.values():
+                    v.config(text="—", fg="#1e293b")
+                return
+
+            fields["Name"].config(text=acc.get("name", "—"))
+            fields["Account No"].config(text=acc["account_id"])
+            fields["Type"].config(text=acc.get("account_type", "—"))
+
+            bal = acc.get("balance", 0)
+            fields["Balance"].config(
+                text=format_currency(bal),
+                fg="#dc2626" if bal != 0 else "#16a34a"
+            )
+
+            status = "Locked" if acc.get("is_locked") else "Active"
+            fields["Status"].config(
+                text=status,
+                fg="#dc2626" if status == "Locked" else "#16a34a"
+            )
+
+            fields["Created On"].config(
+                text=acc.get("created_at", "")[:10]
+            )
+
+        acc_var.trace_add("write", update_summary)
+
+        # ================= DELETE LOGIC =================
         def delete_account():
             aid = to_int(acc_var.get())
-    
             if aid <= 0:
-                return messagebox.showerror("Invalid Input", "Enter a valid Account Number")
-    
+                return messagebox.showerror("Invalid Input", "Enter valid Account Number")
+
             acc = models.get_account(aid)
             if not acc:
                 return messagebox.showerror("Not Found", "Account does not exist")
-    
+
             if not messagebox.askyesno(
-                "⚠ Confirm Deletion",
-                f"This action is PERMANENT.\n\nDelete account {aid}?"
+                "Confirm Deletion",
+                f"Delete account {aid} permanently?"
             ):
                 return
-    
+
             try:
                 models.delete_account(aid)
+                notify_user(acc, "ACCOUNT_DELETED")
                 messagebox.showinfo("Deleted", f"Account {aid} deleted successfully")
                 acc_var.set("")
             except Exception as e:
                 messagebox.showerror("Error", str(e))
-    
+
         delete_btn.bind("<Button-1>", lambda e: delete_account())
-    
+
 
 # ---------- Run GUI ----------
 if __name__ == "__main__":
