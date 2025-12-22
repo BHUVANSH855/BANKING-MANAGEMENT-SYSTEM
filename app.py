@@ -18,7 +18,6 @@ def require_admin(pin):
         return False
     return verify_pin(pin, acc["pin_hash"])
 
-
 # Try to import project modules (models/db/utils)
 try:
     import models
@@ -38,7 +37,6 @@ INIT_SQL = PROJECT_ROOT / "init_db.sql"
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="/")
 CORS(app)
 
-
 def ensure_db_initialized():
     """Initialize DB if missing (safe no-op if db exists)."""
     try:
@@ -52,7 +50,6 @@ def ensure_db_initialized():
     except Exception:
         print("DB initialization failed (continuing):")
         traceback.print_exc()
-
 
 # Startup diagnostics
 def print_startup_info():
@@ -69,12 +66,10 @@ def print_startup_info():
     print("banking.db exists?:", DB_FILE.exists())
     print("===========================")
 
-
 # Simple request logging (for debug)
 @app.before_request
 def log_request():
     print(f"[REQ] {request.method} {request.path}")
-
 
 # Index route - serve index.html (only if file exists)
 @app.route("/", methods=["GET"])
@@ -92,7 +87,6 @@ def index():
             "<p>Make sure the folder 'frontend' (containing index.html) is in the same folder as app.py</p>"
         ), 404
 
-
 # Generic static file handler (serves css/js/pages if present)
 @app.route("/<path:filename>", methods=["GET"])
 def static_files(filename):
@@ -106,7 +100,6 @@ def static_files(filename):
         f"<p>Requested: {filename}</p>"
         f"<p>Looked in: {file_path}</p>"
     ), 404
-
 
 # ------------------- API endpoints (same as before) -------------------
 # Note: these use the models functions. If models import failed, these endpoints may error.
@@ -127,7 +120,6 @@ def api_create_account():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
 
-
 @app.route("/api/deposit", methods=["POST"])
 def api_deposit():
     try:
@@ -141,7 +133,6 @@ def api_deposit():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
-
 
 @app.route("/api/withdraw", methods=["POST"])
 def api_withdraw():
@@ -162,7 +153,6 @@ def api_withdraw():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
-
 
 @app.route("/api/transfer", methods=["POST"])
 def api_transfer():
@@ -185,7 +175,6 @@ def api_transfer():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
 
-
 @app.route("/api/transactions/<int:account_id>", methods=["GET"])
 def api_transactions(account_id: int):
     try:
@@ -195,7 +184,6 @@ def api_transactions(account_id: int):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
-
 
 @app.route("/api/account/<int:account_id>", methods=["GET"])
 def api_get_account(account_id: int):
@@ -289,10 +277,8 @@ def admin_stats():
 def admin_users():
     data = request.get_json(force=True)
     pin = data.get("pin", "")
-
     if not require_admin(pin):
         return jsonify({"error": "Unauthorized"}), 403
-
     with models.get_conn() as conn:
         cur = conn.cursor()
         cur.execute("""
@@ -308,7 +294,6 @@ def admin_users():
             ORDER BY account_id
         """)
         rows = cur.fetchall()
-
     users = []
     for r in rows:
         users.append({
@@ -319,17 +304,14 @@ def admin_users():
             "balance": r["balance"],
             "status": "Locked" if r["is_locked"] else "Active"
         })
-
     return jsonify(users)
 
 @app.route("/api/admin/transactions", methods=["POST"])
 def admin_all_transactions():
     data = request.get_json(force=True)
     pin = data.get("pin", "")
-
     if not require_admin(pin):
         return jsonify({"error": "Unauthorized"}), 403
-
     with models.get_conn() as conn:
         cur = conn.cursor()
         cur.execute("""
@@ -348,49 +330,36 @@ def admin_all_transactions():
             ORDER BY t.created_at DESC
         """)
         rows = cur.fetchall()
-
     return jsonify([dict(r) for r in rows])
-
 
 @app.route("/api/admin/toggle-lock", methods=["POST"])
 def admin_toggle_lock():
     data = request.get_json(force=True)
     pin = data.get("pin", "")
     account_id = data.get("account_id")
-
     if not require_admin(pin):
         return jsonify({"error": "Unauthorized"}), 403
-
     if not account_id:
         return jsonify({"error": "Account ID required"}), 400
-
     with models.get_conn(True) as conn:
         cur = conn.cursor()
-
         cur.execute(
             "SELECT is_locked FROM accounts WHERE account_id=? AND role='USER'",
             (account_id,)
         )
         row = cur.fetchone()
-
         if not row:
             return jsonify({"error": "User not found"}), 404
-
         new_status = 0 if row["is_locked"] else 1
-
         cur.execute(
             "UPDATE accounts SET is_locked=? WHERE account_id=?",
             (new_status, account_id)
         )
-
         conn.commit()
-
     return jsonify({
         "account_id": account_id,
         "status": "Locked" if new_status else "Active"
     })
-
-
 
 # --------------------------------------------------------------------
 if __name__ == "__main__":
