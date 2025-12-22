@@ -376,7 +376,6 @@ class LoginGUI(tk.Tk):
         app.after(300, lambda: app.show_welcome_popup(acc_name))
         app.mainloop()
 
-
 # ---------- Main GUI ----------
 class BankGUI(tk.Tk):
     def __init__(self):
@@ -407,7 +406,6 @@ class BankGUI(tk.Tk):
         self.num_validate = (self.register(self.only_numbers), "%P")
         self.phone_validate = (self.register(self.only_10_digits), "%P")
         self.field_widgets = {}
-        # -------- View Account State --------
         self.current_account = None
         self.view_tab_buttons = {}
         self.view_tab_content = None
@@ -415,7 +413,6 @@ class BankGUI(tk.Tk):
         self.title("🏦 Banking Management System")
         self.minsize(950, 650)
         self.configure(bg="#f0f2f5")
-        # --- Gradient Background ---
         # Background container (ALWAYS at back)
         self.bg_frame = tk.Frame(self)
         self.bg_frame.place(x=0, y=0, relwidth=1, relheight=1)
@@ -425,10 +422,7 @@ class BankGUI(tk.Tk):
         self.deposit_method = None
         self.deposit_upi_verified = False
         # ---------- Session ----------
-        self.session = {
-            "account_id": None,
-            "role": "USER"   # default
-        }
+        self.session = {"account_id": None, "role": "USER"}
         self.current_theme = "light"
         self.theme = THEMES[self.current_theme]
 
@@ -3822,3 +3816,4 @@ class BankGUI(tk.Tk):
 # ---------- Run GUI ----------
 if __name__ == "__main__":
     LoginGUI().mainloop()
+
