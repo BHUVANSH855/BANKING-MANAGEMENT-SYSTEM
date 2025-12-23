@@ -18,7 +18,6 @@ def require_admin(pin):
         return False
     return verify_pin(pin, acc["pin_hash"])
 
-# Try to import project modules (models/db/utils)
 try:
     import models
     from db import initialize_db
@@ -28,7 +27,7 @@ except Exception as e:
     traceback.print_exc()
     # We continue because for debugging static files we don't need models to be present necessarily.
 
-# Setup
+
 PROJECT_ROOT = Path(__file__).resolve().parent
 FRONTEND_DIR = PROJECT_ROOT / "frontend"
 DB_FILE = PROJECT_ROOT / "banking.db"
@@ -370,3 +369,4 @@ if __name__ == "__main__":
     print(app.url_map)
     # Start server
     app.run(host="127.0.0.1", port=5000, debug=True)
+
