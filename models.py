@@ -13,7 +13,6 @@ def verify_admin(admin_id, password):
     hashed = hashlib.sha256(password.encode()).hexdigest()
     return hashed == ADMIN_PASSWORD_HASH
 
-
 def ensure_admin_account():
     from utils import hash_pin
     with get_conn(True) as conn:
@@ -21,7 +20,6 @@ def ensure_admin_account():
         cur.execute("SELECT account_id FROM accounts WHERE role='ADMIN'")
         if cur.fetchone():
             return
-
         cur.execute("""
             INSERT INTO accounts (
                 name, email, phone,
@@ -32,11 +30,10 @@ def ensure_admin_account():
             "admin@bank.local",
             "0000000000",
             0.0,
-            hash_pin("123456"),   # CHANGE AFTER TESTING
+            hash_pin("123456"),
             "ADMIN"
         ))
         conn.commit()
-
 
 # ---------- Account CRUD ----------
 def create_account(
@@ -319,3 +316,4 @@ def unlock_account(account_id):
             WHERE account_id = ?
         """, (account_id,))
         conn.commit()
+
