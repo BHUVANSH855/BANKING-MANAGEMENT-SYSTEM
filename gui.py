@@ -59,16 +59,14 @@ SUPPORTED_IMAGE_EXTS = (
     ".jpg", ".jpeg", ".png", ".bmp",
     ".tiff", ".webp", ".gif", ".ico"
 )
-# ---------- Notification System (Email + SMS Simulation) ----------
 
+# ---------- Notification System (Email + SMS Simulation) ----------
 def send_email(to_email, subject, body):
     """
     REAL INSTANT EMAIL using Gmail SMTP
     """
-
     if not to_email:
         return
-
     import smtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
@@ -122,13 +120,11 @@ def send_sms(to_phone, message):
         "authorization": "RNcAqSnWLQbKJXdhePrtikYp5Da3G6Tgxv8MmOl9fV1jHsBw24TYROG84JCtoxvm2QDBflV0HU37jcNy",
         "Content-Type": "application/json",
     }
-
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=5)
         response.raise_for_status()
     except Exception as e:
         print("❌ SMS FAILED:", e)
-
 
 def notify_user(acc, event, **kwargs):
     """
@@ -136,7 +132,6 @@ def notify_user(acc, event, **kwargs):
     """
     email = acc.get("email")
     phone = acc.get("phone")
-
     messages = {
         "ACCOUNT_CREATED": (
             "Account Created",
@@ -3816,4 +3811,5 @@ class BankGUI(tk.Tk):
 # ---------- Run GUI ----------
 if __name__ == "__main__":
     LoginGUI().mainloop()
+
 
