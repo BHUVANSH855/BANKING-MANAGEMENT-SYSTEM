@@ -82,7 +82,6 @@ def create_account(
 
         # ✅ account_id is GUARANTEED here
         account_id = cur.lastrowid
-
         # Initial transaction
         if initial_deposit > 0:
             cur.execute("""
@@ -108,7 +107,6 @@ def get_account(account_id):
         )
         row = cur.fetchone()
         return dict(row) if row else None
-
 
 def get_account_by_email(email):
     with get_conn() as conn:
@@ -167,7 +165,6 @@ def deposit(account_id, amount, note=None):
         conn.commit()
         return new_balance
 
-
 def withdraw(account_id, amount, note=None):
     if amount <= 0:
         raise ValueError('Amount must be positive')
@@ -207,7 +204,6 @@ def withdraw(account_id, amount, note=None):
         conn.commit()
         return new_balance
 
-
 def transfer(from_acct, to_acct, amount):
     if amount <= 0:
         raise ValueError('Amount must be positive')
@@ -222,7 +218,6 @@ def transfer(from_acct, to_acct, amount):
             r1 = cur.fetchone()
             if r1["is_locked"]:
                 raise ValueError("Source account is locked by bank admin")
-
             cur.execute(
                 "SELECT balance, is_locked FROM accounts WHERE account_id=? AND role='USER'",
                 (to_acct,)
@@ -230,7 +225,6 @@ def transfer(from_acct, to_acct, amount):
             r2 = cur.fetchone()
             if r2["is_locked"]:
                 raise ValueError("Destination account is locked by bank admin")
-
             if not r1 or not r2:
                 raise ValueError('One or both accounts not found')
             if r1['balance'] < amount:
@@ -316,4 +310,5 @@ def unlock_account(account_id):
             WHERE account_id = ?
         """, (account_id,))
         conn.commit()
+
 
