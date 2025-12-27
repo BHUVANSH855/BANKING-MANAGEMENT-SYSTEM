@@ -80,7 +80,6 @@ def send_email(to_email, subject, body):
     msg["From"] = EMAIL_ID
     msg["To"] = to_email
     msg["Subject"] = subject
-
     msg.attach(MIMEText(body, "plain"))
 
     try:
@@ -3811,5 +3810,6 @@ class BankGUI(tk.Tk):
 # ---------- Run GUI ----------
 if __name__ == "__main__":
     LoginGUI().mainloop()
+
 
 
