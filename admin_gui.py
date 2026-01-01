@@ -100,4 +100,3 @@ class AdminLogin(tk.Tk):
 if __name__ == "__main__":
     app = AdminLogin()
     app.mainloop()
-
