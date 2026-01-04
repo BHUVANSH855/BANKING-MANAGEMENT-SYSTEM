@@ -58,3 +58,4 @@ def initialize_db(sql_file: str = None):
             ''')
             cur.execute('CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id)')
         conn.commit()
+
