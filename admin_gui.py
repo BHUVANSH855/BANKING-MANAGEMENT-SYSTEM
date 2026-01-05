@@ -12,7 +12,6 @@ class AdminLogin(tk.Tk):
         self.geometry("360x260")
         self.resizable(False, False)
         self.configure(bg="#f8fafc")
-
         # -------- Header --------
         header = tk.Label(
             self,
@@ -23,7 +22,6 @@ class AdminLogin(tk.Tk):
             pady=15
         )
         header.pack(fill="x")
-
         # -------- Card --------
         card = tk.Frame(self, bg="white", bd=1, relief="solid")
         card.pack(padx=30, pady=25, fill="both", expand=True)
