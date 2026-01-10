@@ -1,62 +1,550 @@
-:root{
-  --accent:#2b7cff;
-  --muted:#6b7280;
-  --bg:#f5f7fb;
-  --card:#ffffff;
-  --radius:12px;
-  --shadow: 0 6px 18px rgba(20,24,40,0.08);
-  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+/* ================= RESET ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", system-ui, sans-serif;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  background:linear-gradient(180deg,var(--bg),#eef2fb);
-  color:#0f172a;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
+
+body {
+  background: #f4f6fb;
+  color: #1e293b;
 }
-.container{
-  max-width:980px;
-  margin:36px auto;
-  padding:24px;
+
+/* ================= NAVBAR ================= */
+.navbar {
+  height: 56px;
+  background: #020617;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
 }
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
+
+.nav-left {
+  font-size: 22px;
+  font-weight: 800;
 }
-.brand{
-  display:flex;align-items:center;gap:12px;
+
+.nav-left span {
+  margin-left: 6px;
 }
-.logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#6ec1ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
-.title{font-size:20px;font-weight:600}
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-top:18px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
-@media(max-width:800px){.grid{grid-template-columns:1fr}}
-.controls{display:flex;gap:8px;align-items:center}
-.btn{background:var(--accent);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
-.btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(43,124,255,0.12)}
-.form-row{display:flex;gap:12px;margin-bottom:12px}
-.form-row .field{flex:1}
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-input[type=text],input[type=email],input[type=number],input[type=password],select,textarea{
-  width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e6e9f0;background:transparent;font-size:14px
+
+.nav-right a {
+  color: #cbd5e1;
+  text-decoration: none;
+  margin-left: 20px;
+  font-weight: 600;
 }
-.small{font-size:13px;color:var(--muted)}
-.hint{font-size:13px;color:#888;margin-top:8px}
-.nav{display:flex;gap:8px;flex-wrap:wrap}
-.nav a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--muted);background:transparent}
-.nav a.active{background:rgba(43,124,255,0.12);color:var(--accent)}
-.table{width:100%;border-collapse:collapse;margin-top:8px}
-.table th,.table td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left}
-.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
-.kv{display:flex;justify-content:space-between;gap:10px}
-.center{display:flex;align-items:center;justify-content:center}
-.chip{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef2ff;color:var(--accent);font-weight:600}
-.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+
+.nav-right a.active,
+.nav-right a:hover {
+  color: white;
+}
+
+/* ================= HERO ================= */
+.hero {
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  padding: 60px 0;
+}
+
+.hero-inner {
+  max-width: 1100px;
+  margin: auto;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.hero-text h1 {
+  font-size: 44px;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.hero-text p {
+  color: #e0f2fe;
+  margin-bottom: 20px;
+}
+
+.hero-visual {
+  font-size: 110px;
+  opacity: 0.12;
+}
+
+/* ================= MAIN ================= */
+.main {
+  max-width: 1100px;
+  margin: 50px auto;
+  padding: 0 20px;
+}
+
+.actions {
+  margin-top: 60px;
+}
+
+.actions h2 {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.actions-sub {
+  color: #64748b;
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 24px;
+  margin-bottom: 25px;
+}
+
+/* ================= ACTION CARDS ================= */
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.action-card {
+  background: white;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+}
 
 
-@media(max-width:420px){.form-row{flex-direction:column}}
+.action-card h3 {
+  margin-bottom: 10px;
+}
+
+.action-card p {
+  color: #475569;
+  margin-bottom: 20px;
+}
+
+/* ================= FORMS ================= */
+label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0 16px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+}
+
+/* ================= BUTTONS ================= */
+.btn {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn.secondary {
+  background: #0f172a;
+  color: white;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* ================= FOOTER ================= */
+.footer {
+  margin-top: 80px;
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .hero-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-visual {
+    display: none;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-right {
+    display: none;
+  }
+}
+
+/* ================= ENHANCEMENTS (STEP 3) ================= */
+
+/* Smooth transitions everywhere */
+a, button, .action-card {
+  transition: all 0.25s ease;
+}
+
+/* ---------- ACTION CARDS HOVER ---------- */
+.action-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- BUTTON HOVER ---------- */
+.btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.btn.secondary:hover {
+  background: #020617;
+}
+
+/* ---------- HERO POLISH ---------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+}
+
+/* ---------- ACTION TITLE ---------- */
+.actions h2 {
+  font-size: 28px;
+  text-align: center;
+}
+
+.actions-sub {
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 40px;
+}
+
+/* ---------- INPUT FOCUS ---------- */
+input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ---------- NAVBAR SHADOW ---------- */
+.navbar {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+/* ---------- FOOTER FADE ---------- */
+.footer {
+  border-top: 1px solid #e2e8f0;
+}
+
+/* ================= STEP 4 – COLOR CARDS ================= */
+
+.card-create {
+  border-top: 5px solid #2563eb;
+}
+
+.card-deposit {
+  border-top: 5px solid #16a34a;
+}
+
+.card-withdraw {
+  border-top: 5px solid #dc2626;
+}
+
+.card-transfer {
+  border-top: 5px solid #7c3aed;
+}
+
+.card-transactions {
+  border-top: 5px solid #f59e0b;
+}
+
+.card-search {
+  border-top: 5px solid #0f172a;
+}
+
+/* Button color sync */
+.card-deposit .btn {
+  background: #16a34a;
+}
+
+.card-withdraw .btn {
+  background: #dc2626;
+}
+
+.card-transfer .btn {
+  background: #7c3aed;
+}
+
+.card-transactions .btn {
+  background: #f59e0b;
+}
+
+.card-search .btn {
+  background: #0f172a;
+}
+
+.card-deposit .btn:hover {
+  background: #15803d;
+}
+
+.card-withdraw .btn:hover {
+  background: #b91c1c;
+}
+
+.card-transfer .btn:hover {
+  background: #6d28d9;
+}
+
+.card-transactions .btn:hover {
+  background: #d97706;
+}
+
+.card-search .btn:hover {
+  background: #020617;
+}
+
+body {
+  animation: fadeInPage 0.6s ease-in-out;
+}
+
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- TABLET ---------- */
+@media (max-width: 1024px) {
+  .hero-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-visual {
+    font-size: 100px;
+    margin-top: 20px;
+  }
+
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 640px) {
+
+  /* Navbar */
+  .navbar {
+    flex-direction: column;
+    height: auto;
+    padding: 15px;
+  }
+
+  .nav-right {
+    margin-top: 10px;
+  }
+
+  .nav-right a {
+    margin: 0 10px;
+    font-size: 14px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 40px 0;
+  }
+
+  .hero-text h1 {
+    font-size: 34px;
+  }
+
+  .hero-visual {
+    font-size: 80px;
+  }
+
+  /* Dashboard cards */
+  .actions-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .action-card {
+    padding: 24px;
+  }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Main spacing */
+  .main {
+    margin: 30px auto;
+  }
+}
+
+/* ================= STEP 7 – ICON STYLING ================= */
+
+.action-card i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.card-create i { color: #2563eb; }
+.card-deposit i { color: #16a34a; }
+.card-withdraw i { color: #dc2626; }
+.card-transfer i { color: #7c3aed; }
+.card-transactions i { color: #f59e0b; }
+.card-search i { color: #0f172a; }
+
+/* ================= STEP 8 – DARK MODE ================= */
+
+.theme-btn {
+  margin-left: 20px;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #cbd5e1;
+}
+
+.theme-btn:hover {
+  color: white;
+}
+
+/* ---- DARK THEME ---- */
+body.dark {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+body.dark .navbar {
+  background: #020617;
+}
+
+body.dark .action-card {
+  background: #020617;
+  color: #e5e7eb;
+  border-color: #1e293b;
+}
+
+body.dark .hero {
+  background: linear-gradient(135deg, #020617, #1e293b);
+}
+
+body.dark input {
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid #334155;
+}
+
+body.dark .footer {
+  color: #9ca3af;
+}
+
+/* ================= STEP 9 – MODAL ================= */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-box {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.modal-box h3 {
+  margin-bottom: 10px;
+}
+
+.modal-box p {
+  color: #475569;
+  margin-bottom: 25px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+body.dark .modal-box {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+/* ================= STEP 10 – LOADER ================= */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #e2e8f0;
+  border-top: 5px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+body.dark .loader {
+  background: rgba(2,6,23,0.9);
+}
