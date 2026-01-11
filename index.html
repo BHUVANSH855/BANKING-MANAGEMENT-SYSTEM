@@ -1,64 +1,137 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Banking System - Dashboard</title>
+  <meta charset="UTF-8">
+  <title>BankSys – Banking Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
+<script>
+  const toggle = document.getElementById("themeToggle");
+
+  toggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+
+    toggle.textContent =
+      document.body.classList.contains("dark") ? "☀️" : "🌙";
+  });
+</script>
+<div id="loader" class="loader">
+  <div class="spinner"></div>
+  <p>Processing...</p>
+</div>
+
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="brand">
-        <div class="logo">BS</div>
-        <div>
-          <div class="title">Banking System</div>
-          <div class="small">Simple demo UI — connect to your Python backend</div>
-        </div>
-      </div>
-      <div class="controls nav">
-        <a href="index.html" class="active">Home</a>
-        <a href="create_account.html">Create Account</a>
-        <a href="deposit.html">Deposit</a>
-        <a href="withdraw.html">Withdraw</a>
-        <a href="transfer.html">Transfer</a>
-        <a href="transactions.html">Transactions</a>
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card-header">
-        <h3>Quick actions</h3>
-        <div class="small">Run operations quickly or visit pages</div>
-      </div>
-
-      <div class="grid">
-        <div class="card">
-          <h4>Create account</h4>
-          <p class="small">Create a new customer account with initial deposit.</p>
-          <div class="actions">
-            <a class="btn" href="create_account.html">Create</a>
-          </div>
-        </div>
-
-        <div class="card">
-          <h4>Search account</h4>
-          <form action="view_account.html" method="get">
-            <label>Account ID</label>
-            <input type="number" name="account_id" placeholder="Enter account id (e.g. 1)">
-            <div class="actions">
-              <button class="btn" type="submit">View</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div style="margin-top:18px;" class="small">
-        Tip: Use the forms to send requests to backend endpoints. If you don't have a backend yet, these forms can be connected later.
-      </div>
-    </div>
-
-    <div class="footer">Made for college project • Save data in SQLite or MySQL backend</div>
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+  <div class="nav-left">
+    🏦 <span>BankSys</span>
   </div>
+  <div class="nav-right">
+    <a class="active" href="index.html">Home</a>
+    <a href="create_account.html">Create</a>
+    <a href="deposit.html">Deposit</a>
+    <a href="withdraw.html">Withdraw</a>
+    <a href="transfer.html">Transfer</a>
+    <a href="transactions.html">Transactions</a>
+
+    <button id="themeToggle" class="theme-btn">🌙</button>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>BankSys</h1>
+      <p>
+        A simple and secure banking management system<br>
+        to manage accounts and transactions efficiently.
+      </p>
+      <a href="create_account.html" class="btn primary">Get Started</a>
+    </div>
+
+    <div class="hero-visual">
+      🏦
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+
+  <section class="actions">
+  <h2>Quick Actions</h2>
+  <p class="actions-sub">Choose what you want to do</p>
+
+  <div class="actions-grid">
+
+  <!-- CREATE ACCOUNT -->
+  <div class="action-card card-deposit">
+    <h3><i class="fa-solid fa-user-plus"></i> Create Account</h3>
+    <p>
+      Open a new bank account for a customer with
+      secure PIN and initial deposit.
+    </p>
+    <a href="create_account.html" class="btn primary">Create</a>
+  </div>
+
+  <!-- DEPOSIT -->
+  <div class="action-card card-deposit">
+    <h3><i class="fa-solid fa-circle-arrow-down"></i> Deposit Money</h3>
+    <p>
+      Add money into an existing account using
+      account number.
+    </p>
+    <a href="deposit.html" class="btn secondary">Deposit</a>
+  </div>
+
+  <!-- WITHDRAW -->
+  <div class="action-card card-withdraw">
+    <h3><i class="fa-solid fa-money-bill-wave"></i> Withdraw Cash</h3>
+    <p>
+      Withdraw funds securely using account number
+      and PIN.
+    </p>
+    <a href="withdraw.html" class="btn secondary">Withdraw</a>
+  </div>
+
+  <!-- TRANSFER -->
+  <div class="action-card card-transfer">
+    <h3><i class="fa-solid fa-arrow-right-arrow-left"></i> Transfer Funds</h3>
+    <p>
+      Transfer money between two bank accounts
+      instantly.
+    </p>
+    <a href="transfer.html" class="btn secondary">Transfer</a>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="action-card card-transactions">
+    <h3><i class="fa-solid fa-chart-line"></i> Transactions</h3>
+    <p>
+      View complete transaction history including
+      deposits and withdrawals.
+    </p>
+    <a href="transactions.html" class="btn secondary">View</a>
+  </div>
+
+  <!-- SEARCH ACCOUNT -->
+  <div class="action-card card-search">
+    <h3><i class="fa-solid fa-magnifying-glass"></i> Search Account</h3>
+    <form action="view_account.html" method="get">
+      <label>Account ID</label>
+      <input type="number" name="account_id" placeholder="e.g. 1" required>
+      <button class="btn primary" type="submit">Search</button>
+    </form>
+  </div>
+</div>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  Made for college project • Backend: Python + SQLite / MySQL
+</footer>
 </body>
 </html>
