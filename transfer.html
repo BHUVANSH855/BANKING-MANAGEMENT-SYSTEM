@@ -1,29 +1,95 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Transfer</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Transfer Funds – BankSys</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<div class="container">
-  <div class="header"><div class="brand"><div class="logo">BS</div><div><div class="title">Transfer</div><div class="small">Send money to another account</div></div></div>
-  <div class="controls nav"><a href="index.html">Home</a><a href="create_account.html">Create</a><a href="deposit.html">Deposit</a><a href="withdraw.html">Withdraw</a><a class="active">Transfer</a></div>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+  <div class="nav-left">
+    🏦 <span>BankSys</span>
+  </div>
+  <div class="nav-right">
+    <a href="index.html">Home</a>
+    <a href="create_account.html">Create</a>
+    <a href="deposit.html">Deposit</a>
+    <a href="withdraw.html">Withdraw</a>
+    <a class="active" href="transfer.html">Transfer</a>
+    <a href="transactions.html">Transactions</a>
+    <button id="themeToggle" class="theme-btn">🌙</button>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>Transfer Funds</h1>
+      <p>Securely transfer money between two bank accounts</p>
+    </div>
+    <div class="hero-visual">🔁</div>
+  </div>
+</section>
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+
+  <div class="actions-grid" style="grid-template-columns: 1fr; max-width: 480px; margin:auto;">
+
+    <div class="action-card card-transfer">
+
+      <h3>Transfer Details</h3>
+
+      <form action="/api/transfer" method="post">
+
+        <label>From Account ID</label>
+        <input type="number" name="from_account" placeholder="Sender account ID" required>
+
+        <label>To Account ID</label>
+        <input type="number" name="to_account" placeholder="Receiver account ID" required>
+
+        <label>Amount</label>
+        <input type="number" name="amount" placeholder="Amount (₹)" required>
+
+        <label>PIN</label>
+        <input type="password" name="pin" placeholder="Account PIN" required>
+
+        <button class="btn" type="submit" style="width:100%;">
+          Transfer
+        </button>
+
+      </form>
+
+      <a href="index.html" style="display:block;margin-top:15px;text-align:center;color:#64748b;">
+        Cancel
+      </a>
+
+    </div>
+
   </div>
 
-  <div class="card">
-    <form method="post" action="/api/transfer">
-      <div class="form-row">
-        <div class="field"><label>From Account ID</label><input type="number" name="from_id" required></div>
-        <div class="field"><label>To Account ID</label><input type="number" name="to_id" required></div>
-      </div>
-      <div class="form-row">
-        <div class="field"><label>Amount</label><input type="number" name="amount" step="0.01" required></div>
-        <div class="field"><label>PIN</label><input type="password" name="pin" minlength="4" maxlength="6" required></div>
-      </div>
-      <div class="actions"><button class="btn" type="submit">Transfer</button><a class="btn ghost" href="index.html">Cancel</a></div>
-    </form>
-  </div>
-</div>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  Secure Transfer • BankSys
+</footer>
+
+<script>
+  const toggle = document.getElementById("themeToggle");
+  toggle.onclick = () => {
+    document.body.classList.toggle("dark");
+    toggle.textContent =
+      document.body.classList.contains("dark") ? "☀️" : "🌙";
+  };
+</script>
+
 </body>
 </html>
