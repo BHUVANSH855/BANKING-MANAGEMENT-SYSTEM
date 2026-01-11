@@ -4,55 +4,127 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Create Account</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="brand"><div class="logo">BS</div><div><div class="title">Create Account</div><div class="small">Fill details below</div></div></div>
-      <div class="controls nav"><a href="index.html">Home</a><a class="active">Create</a><a href="transactions.html">Transactions</a></div>
-    </div>
-    <div class="card">
-      <form id="createForm" method="post" action="/api/create_account">
-        <div class="form-row">
-          <div class="field">
-            <label>Name</label>
-            <input type="text" name="name" required>
-          </div>
-          <div class="field">
-            <label>Email</label>
-            <input type="email" name="email">
-          </div>
-        </div>
+<!-- ================= CONFIRM MODAL ================= -->
+<div id="confirmModal" class="modal">
+  <div class="modal-box">
+    <h3>Confirm Action</h3>
+    <p>Are you sure you want to create this account?</p>
 
-        <div class="form-row">
-          <div class="field">
-            <label>Phone</label>
-            <input type="text" name="phone">
-          </div>
-          <div class="field">
-            <label>PIN (4-6 digits)</label>
-            <input type="password" name="pin" minlength="4" maxlength="6" required>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="field">
-            <label>Initial deposit</label>
-            <input type="number" name="initial_deposit" step="0.01" value="0">
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn" type="submit">Create Account</button>
-          <a class="btn ghost" href="index.html">Cancel</a>
-        </div>
-      </form>
-
-      <p class="hint">Note: This form posts to <code>/api/create_account</code>. If you use the provided Python backend, that route is already outlined in the project files.</p>
+    <div class="modal-actions">
+      <button id="cancelBtn" class="btn secondary">Cancel</button>
+      <button id="confirmBtn" class="btn primary">Yes, Continue</button>
     </div>
   </div>
+</div>
+<script>
+  const form = document.getElementById("createForm");
+  const modal = document.getElementById("confirmModal");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const confirmBtn = document.getElementById("confirmBtn");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    modal.style.display = "flex";
+  });
+
+  cancelBtn.onclick = () => {
+    modal.style.display = "none";
+  };
+
+  confirmBtn.onclick = () => {
+    modal.style.display = "none";
+    form.submit();
+  };
+</script>
+<div id="loader" class="loader">
+  <div class="spinner"></div>
+  <p>Processing...</p>
+</div>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+  <div class="nav-left">
+    🏦 <span>BankSys</span>
+  </div>
+  <div class="nav-right">
+    <a href="index.html">Home</a>
+    <a class="active" href="create_account.html">Create</a>
+    <a href="deposit.html">Deposit</a>
+    <a href="withdraw.html">Withdraw</a>
+    <a href="transfer.html">Transfer</a>
+    <a href="transactions.html">Transactions</a>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1>Create Account</h1>
+      <p>
+        Open a new bank account securely <br>
+        by filling in the required details.
+      </p>
+    </div>
+
+    <div class="hero-visual">
+      🆕
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+
+  <section class="actions">
+    <h2>Create New Account</h2>
+    <p class="actions-sub">Please fill all details carefully</p>
+
+    <div class="actions-grid" style="grid-template-columns: 1fr; max-width: 520px; margin:auto;">
+
+      <div class="action-card">
+
+        <form id="createForm" action="/create_account" method="post">
+
+          <label>Full Name</label>
+          <input type="text" name="name" placeholder="Enter full name" required>
+
+          <label>Email</label>
+          <input type="email" name="email" placeholder="example@gmail.com" required>
+
+          <label>Phone Number</label>
+          <input type="text" name="phone" placeholder="10 digit mobile number" required>
+
+          <label>Initial Deposit</label>
+          <input type="number" name="deposit" placeholder="Minimum ₹500" required>
+
+          <label>PIN</label>
+          <input type="password" name="pin" placeholder="4–6 digit PIN" required>
+
+          <button class="btn primary" type="submit" style="width:100%; margin-top:10px;">
+            Create Account
+          </button>
+
+        </form>
+
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  Made for college project • Backend: Python + SQLite / MySQL
+</footer>
+
 </body>
+
 </html>
-
-
 
