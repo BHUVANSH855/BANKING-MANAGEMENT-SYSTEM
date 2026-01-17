@@ -4,24 +4,14 @@
   <meta charset="UTF-8">
   <title>BankSys – Banking Management System</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../CSS/styles.css">
+
 </head>
-<script>
-  const toggle = document.getElementById("themeToggle");
-
-  toggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-
-    toggle.textContent =
-      document.body.classList.contains("dark") ? "☀️" : "🌙";
-  });
-</script>
+<body>
 <div id="loader" class="loader">
   <div class="spinner"></div>
   <p>Processing...</p>
 </div>
-
-<body>
 
 <!-- ================= NAVBAR ================= -->
 <nav class="navbar">
@@ -35,7 +25,6 @@
     <a href="withdraw.html">Withdraw</a>
     <a href="transfer.html">Transfer</a>
     <a href="transactions.html">Transactions</a>
-
     <button id="themeToggle" class="theme-btn">🌙</button>
   </div>
 </nav>
@@ -44,14 +33,42 @@
 <section class="hero">
   <div class="hero-inner">
     <div class="hero-text">
-      <h1>BankSys</h1>
-      <p>
-        A simple and secure banking management system<br>
-        to manage accounts and transactions efficiently.
+      <div class="page-wrapper">
+      <div class="action-card large" style="display:flex; gap:40px; align-items:center;">
+      
+        <!-- LEFT SIDE : IMAGE / LOGO -->
+        <div style="flex:1; text-align:center;">
+          <img src="../ASSETS/bank.png" alt="Bank" class="floating">
+        </div>
+      
+        <!-- RIGHT SIDE : LOGIN -->
+        <div style="flex:1;">
+          <h2>Login to Your Account</h2>
+          <p class="subtitle">Access your bank account securely</p>
+        
+          <form action="/login" method="post">
+            <label>Account ID</label>
+            <input type="number" name="account_id" required>
+          
+            <label>PIN</label>
+            <input type="password" name="pin" required>
+          
+            <button type="submit">Login</button>
+          </form>
+        
+          <p style="margin-top:15px;">
+            Don’t have an account?
+            <a href="request_account.html" style="font-weight:600;">Request Account</a>
+          </p>
+        </div>
+      </div>
+    </div>
+      <h1>Welcome to BankSys</h1>
+      <p class="subtitle">
+        A secure and user-friendly banking management system
       </p>
       <a href="create_account.html" class="btn primary">Get Started</a>
     </div>
-
     <div class="hero-visual">
       🏦
     </div>
@@ -68,13 +85,20 @@
   <div class="actions-grid">
 
   <!-- CREATE ACCOUNT -->
-  <div class="action-card card-deposit">
-    <h3><i class="fa-solid fa-user-plus"></i> Create Account</h3>
-    <p>
-      Open a new bank account for a customer with
-      secure PIN and initial deposit.
-    </p>
-    <a href="create_account.html" class="btn primary">Create</a>
+  <div class="action-card flip-card">
+    <div class="flip-card-inner">
+
+      <div class="flip-front">
+        <h3>Create Account</h3>
+        <p>Open a new account</p>
+      </div>
+
+      <div class="flip-back">
+        <p>Request admin approval to create an account</p>
+        <a href="request_account.html" class="btn">Request</a>
+      </div>
+
+    </div>
   </div>
 
   <!-- DEPOSIT -->
@@ -133,5 +157,6 @@
 <footer class="footer">
   Made for college project • Backend: Python + SQLite / MySQL
 </footer>
+<script src="../JS/app.js"></script>
 </body>
 </html>
