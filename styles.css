@@ -255,6 +255,27 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+/* Hover effect: tells user input is interactive */
+input:hover {
+  border-color: #60a5fa;
+}
+
+/* Focus animation: premium pulse effect */
+input:focus {
+  animation: inputPulse 0.4s ease;
+}
+
+/* Pulse animation keyframes */
+@keyframes inputPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
+  }
+}
+
+
 /* ---------- NAVBAR SHADOW ---------- */
 .navbar {
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
@@ -547,4 +568,222 @@ body.dark .modal-box {
 
 body.dark .loader {
   background: rgba(2,6,23,0.9);
+}
+
+/* ================= STEP 12 – MICRO ANIMATIONS ================= */
+
+.action-card {
+  animation: cardPop 0.5s ease;
+}
+
+@keyframes cardPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* ================= STEP 13 – ACCESSIBILITY ================= */
+
+a:focus,
+button:focus,
+input:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 2px;
+}
+
+label {
+  display: block;
+  margin-bottom: 4px;
+}
+/* ---------- DARK MODE ---------- */
+body.dark {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+body.dark .navbar {
+  background: #020617;
+}
+
+body.dark .action-card,
+body.dark .hero,
+body.dark .main {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+body.dark a {
+  color: #93c5fd;
+}
+
+body.dark .btn.primary {
+  background: #2563eb;
+}
+/* ---------- CARDS ---------- */
+.action-card {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+body.dark .action-card {
+  background: #020617;
+}
+
+/* ---------- LINKS ---------- */
+a {
+  text-decoration: none;
+}
+
+a.btn {
+  display: inline-block;
+  margin-top: 8px;
+}
+/* ================== STEP D: VISUAL POLISH ================== */
+
+/* Smooth transitions everywhere */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Better input focus */
+input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Card hover effect */
+.action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Buttons polish */
+.btn {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.btn:hover {
+  transform: scale(1.02);
+}
+
+/* Disabled button */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Footer polish */
+.footer {
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* Page fade-in */
+body {
+  animation: fadeInPage 0.8s ease-in-out;
+}
+
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Navbar link underline animation */
+.nav-right a {
+  position: relative;
+}
+
+.nav-right a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0%;
+  height: 2px;
+  background: #93c5fd;
+  transition: width 0.3s ease;
+}
+
+.nav-right a:hover::after {
+  width: 100%;
+}
+
+/* Button ripple effect */
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+button::after {
+  content: "";
+  position: absolute;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  transform: scale(1);
+}
+
+button:active::after {
+  opacity: 1;
+  transform: scale(20);
+  transition: transform 0.4s, opacity 0.8s;
+}
+
+/* Floating hero image */
+.floating {
+  animation: floatImage 4s ease-in-out infinite;
+}
+
+@keyframes floatImage {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0); }
+}
+
+/* Flip card effect */
+.flip-card {
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-front, .flip-back {
+  backface-visibility: hidden;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.flip-back {
+  transform: rotateY(180deg);
 }
