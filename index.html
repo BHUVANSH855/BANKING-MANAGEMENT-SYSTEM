@@ -30,50 +30,42 @@
 </nav>
 
 <!-- ================= HERO ================= -->
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-text">
-      <div class="page-wrapper">
-      <div class="action-card large" style="display:flex; gap:40px; align-items:center;">
-      
-        <!-- LEFT SIDE : IMAGE / LOGO -->
-        <div style="flex:1; text-align:center;">
-          <img src="../ASSETS/bank.png" alt="Bank" class="floating">
-        </div>
-      
-        <!-- RIGHT SIDE : LOGIN -->
-        <div style="flex:1;">
-          <h2>Login to Your Account</h2>
-          <p class="subtitle">Access your bank account securely</p>
-        
-          <form action="/login" method="post">
-            <label>Account ID</label>
-            <input type="number" name="account_id" required>
-          
-            <label>PIN</label>
-            <input type="password" name="pin" required>
-          
-            <button type="submit">Login</button>
-          </form>
-        
-          <p style="margin-top:15px;">
-            Don’t have an account?
-            <a href="request_account.html" style="font-weight:600;">Request Account</a>
-          </p>
-        </div>
-      </div>
-    </div>
-      <h1>Welcome to BankSys</h1>
-      <p class="subtitle">
-        A secure and user-friendly banking management system
+<section class="hero-split">
+
+  <!-- LEFT 40% : IMAGE -->
+  <div class="hero-split-left">
+    <img src="../ASSETS/asset.png" alt="Bank Illustration" class="floating">
+  </div>
+
+  <!-- RIGHT 60% : LOGIN -->
+  <div class="hero-split-right">
+    <div class="login-form-wrapper">
+
+      <h2>Login to Your Account</h2>
+      <p class="subtitle">Access your bank account securely</p>
+
+      <form action="/login" method="post">
+        <label>Account ID</label>
+        <input type="number" name="account_id" required>
+
+        <label>PIN</label>
+        <input type="password" name="pin" required>
+
+        <button class="btn primary" type="submit" style="width:100%;">
+          Login
+        </button>
+      </form>
+
+      <p class="request-link">
+        Don’t have an account?
+        <a href="request_account.html">Request Account</a>
       </p>
-      <a href="create_account.html" class="btn primary">Get Started</a>
-    </div>
-    <div class="hero-visual">
-      🏦
+
     </div>
   </div>
+
 </section>
+
 
 <!-- ================= MAIN ================= -->
 <main class="main">
