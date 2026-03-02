@@ -1,6 +1,6 @@
 # main.py - GUI entry point
-from app.gui.gui import LoginGUI
-import models
+from backend.app.gui.gui import LoginGUI
+from backend.app.models import models
 
 if __name__ == "__main__":
     # ensure admin exists

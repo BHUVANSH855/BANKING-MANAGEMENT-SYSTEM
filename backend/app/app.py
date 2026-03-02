@@ -21,7 +21,7 @@ def require_admin(pin):
 
 # Try to import project modules (models/db/utils)
 try:
-    import models
+    from backend.app.models import models
     from app.core.db import initialize_db
     from app.core.utils import verify_pin, hash_pin
 except Exception as e:
