@@ -4,11 +4,18 @@
   padding: 0;
   box-sizing: border-box;
   font-family: "Segoe UI", system-ui, sans-serif;
+  transition: all 0.2s ease-in-out;
 }
 
 body {
   background: #f4f6fb;
   color: #1e293b;
+  animation: fadeInPage 0.6s ease;
+}
+
+@keyframes fadeInPage {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ================= NAVBAR ================= */
@@ -20,6 +27,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
 .nav-left {
@@ -27,26 +35,39 @@ body {
   font-weight: 800;
 }
 
-.nav-left span {
-  margin-left: 6px;
-}
-
 .nav-right a {
   color: #cbd5e1;
   text-decoration: none;
   margin-left: 20px;
   font-weight: 600;
+  position: relative;
 }
 
-.nav-right a.active,
 .nav-right a:hover {
   color: white;
+}
+
+.nav-right a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0%;
+  height: 2px;
+  background: #93c5fd;
+  transition: width 0.3s ease;
+}
+
+.nav-right a:hover::after {
+  width: 100%;
 }
 
 /* ================= HERO ================= */
 .hero {
   background: linear-gradient(135deg, #2563eb, #38bdf8);
   padding: 60px 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .hero-inner {
@@ -59,7 +80,7 @@ body {
 }
 
 .hero-text h1 {
-  font-size: 44px;
+  font-size: 42px;
   color: white;
   margin-bottom: 12px;
 }
@@ -69,35 +90,22 @@ body {
   margin-bottom: 20px;
 }
 
-.hero-visual {
-  font-size: 110px;
-  opacity: 0.12;
+.hero::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
 }
 
 /* ================= MAIN ================= */
 .main {
   max-width: 1100px;
-  margin: 50px auto;
+  margin: 60px auto;
   padding: 0 20px;
-}
-
-.actions {
-  margin-top: 60px;
-}
-
-.actions h2 {
-  font-size: 28px;
-  margin-bottom: 6px;
-}
-
-.actions-sub {
-  color: #64748b;
-  margin-bottom: 30px;
-}
-
-.section-title {
-  font-size: 24px;
-  margin-bottom: 25px;
 }
 
 /* ================= ACTION CARDS ================= */
@@ -120,7 +128,6 @@ body {
   box-shadow: 0 18px 40px rgba(0,0,0,0.15);
 }
 
-
 .action-card h3 {
   margin-bottom: 10px;
 }
@@ -130,18 +137,34 @@ body {
   margin-bottom: 20px;
 }
 
+/* ================= COLOR STRIP ================= */
+.card-create { border-top: 5px solid #2563eb; }
+.card-deposit { border-top: 5px solid #16a34a; }
+.card-withdraw { border-top: 5px solid #dc2626; }
+.card-transfer { border-top: 5px solid #7c3aed; }
+.card-transactions { border-top: 5px solid #f59e0b; }
+.card-search { border-top: 5px solid #0f172a; }
+
 /* ================= FORMS ================= */
 label {
+  display: block;
   font-weight: 600;
   font-size: 14px;
+  margin-bottom: 4px;
 }
 
 input {
   width: 100%;
   padding: 12px;
-  margin: 8px 0 16px;
+  margin-bottom: 16px;
   border-radius: 10px;
   border: 1px solid #cbd5e1;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 /* ================= BUTTONS ================= */
@@ -160,13 +183,21 @@ input {
   color: white;
 }
 
+.btn.primary:hover {
+  background: #1d4ed8;
+}
+
 .btn.secondary {
   background: #0f172a;
   color: white;
 }
 
-.btn:hover {
-  opacity: 0.9;
+.btn.secondary:hover {
+  background: #020617;
+}
+
+button:active {
+  transform: scale(0.97);
 }
 
 /* ================= FOOTER ================= */
@@ -174,221 +205,48 @@ input {
   margin-top: 80px;
   padding: 20px;
   text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: #64748b;
-}
-
-@media (max-width: 900px) {
-  .hero-inner {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .hero-visual {
-    display: none;
-  }
-
-  .actions-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .nav-right {
-    display: none;
-  }
-}
-
-/* ================= ENHANCEMENTS (STEP 3) ================= */
-
-/* Smooth transitions everywhere */
-a, button, .action-card {
-  transition: all 0.25s ease;
-}
-
-/* ---------- ACTION CARDS HOVER ---------- */
-.action-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
-}
-
-/* ---------- BUTTON HOVER ---------- */
-.btn.primary:hover {
-  background: #1d4ed8;
-}
-
-.btn.secondary:hover {
-  background: #020617;
-}
-
-/* ---------- HERO POLISH ---------- */
-.hero {
-  position: relative;
-  overflow: hidden;
-}
-
-.hero::after {
-  content: "";
-  position: absolute;
-  top: -40%;
-  right: -20%;
-  width: 400px;
-  height: 400px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-}
-
-/* ---------- ACTION TITLE ---------- */
-.actions h2 {
-  font-size: 28px;
-  text-align: center;
-}
-
-.actions-sub {
-  text-align: center;
-  color: #64748b;
-  margin-bottom: 40px;
-}
-
-/* ---------- INPUT FOCUS ---------- */
-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-}
-
-/* Hover effect: tells user input is interactive */
-input:hover {
-  border-color: #60a5fa;
-}
-
-/* Focus animation: premium pulse effect */
-input:focus {
-  animation: inputPulse 0.4s ease;
-}
-
-/* Pulse animation keyframes */
-@keyframes inputPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
-  }
-  100% {
-    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
-  }
-}
-
-
-/* ---------- NAVBAR SHADOW ---------- */
-.navbar {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-}
-
-/* ---------- FOOTER FADE ---------- */
-.footer {
   border-top: 1px solid #e2e8f0;
 }
 
-/* ================= STEP 4 – COLOR CARDS ================= */
-
-.card-create {
-  border-top: 5px solid #2563eb;
-}
-
-.card-deposit {
-  border-top: 5px solid #16a34a;
-}
-
-.card-withdraw {
-  border-top: 5px solid #dc2626;
-}
-
-.card-transfer {
-  border-top: 5px solid #7c3aed;
-}
-
-.card-transactions {
-  border-top: 5px solid #f59e0b;
-}
-
-.card-search {
-  border-top: 5px solid #0f172a;
-}
-
-/* Button color sync */
-.card-deposit .btn {
-  background: #16a34a;
-}
-
-.card-withdraw .btn {
-  background: #dc2626;
-}
-
-.card-transfer .btn {
-  background: #7c3aed;
-}
-
-.card-transactions .btn {
-  background: #f59e0b;
-}
-
-.card-search .btn {
+/* ================= DARK MODE ================= */
+body.dark {
   background: #0f172a;
+  color: #e5e7eb;
 }
 
-.card-deposit .btn:hover {
-  background: #15803d;
-}
-
-.card-withdraw .btn:hover {
-  background: #b91c1c;
-}
-
-.card-transfer .btn:hover {
-  background: #6d28d9;
-}
-
-.card-transactions .btn:hover {
-  background: #d97706;
-}
-
-.card-search .btn:hover {
+body.dark .navbar {
   background: #020617;
 }
 
-body {
-  animation: fadeInPage 0.6s ease-in-out;
+body.dark .action-card {
+  background: #020617;
+  color: #e5e7eb;
 }
 
-@keyframes fadeInPage {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+body.dark input {
+  background: #020617;
+  color: #e5e7eb;
+  border: 1px solid #334155;
 }
 
-/* ---------- TABLET ---------- */
+body.dark .hero {
+  background: linear-gradient(135deg, #020617, #1e293b);
+}
+
+/* ================= RESPONSIVE ================= */
 @media (max-width: 1024px) {
-  .hero-inner {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .hero-visual {
-    font-size: 100px;
-    margin-top: 20px;
-  }
-
   .actions-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* ---------- MOBILE ---------- */
 @media (max-width: 640px) {
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
 
-  /* Navbar */
   .navbar {
     flex-direction: column;
     height: auto;
@@ -398,392 +256,113 @@ body {
   .nav-right {
     margin-top: 10px;
   }
-
-  .nav-right a {
-    margin: 0 10px;
-    font-size: 14px;
-  }
-
-  /* Hero */
-  .hero {
-    padding: 40px 0;
-  }
-
-  .hero-text h1 {
-    font-size: 34px;
-  }
-
-  .hero-visual {
-    font-size: 80px;
-  }
-
-  /* Dashboard cards */
-  .actions-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-
-  .action-card {
-    padding: 24px;
-  }
-
-  /* Buttons */
-  .btn {
-    width: 100%;
-    text-align: center;
-  }
-
-  /* Main spacing */
-  .main {
-    margin: 30px auto;
-  }
 }
 
-/* ================= STEP 7 – ICON STYLING ================= */
+/* ================= HERO – CORPORATE + MODERN ================= */
 
-.action-card i {
-  margin-right: 8px;
-  font-size: 18px;
+.hero-split {
+  display: flex;
+  min-height: calc(100vh - 56px);
+  width: 100%;
 }
 
-.card-create i { color: #2563eb; }
-.card-deposit i { color: #16a34a; }
-.card-withdraw i { color: #dc2626; }
-.card-transfer i { color: #7c3aed; }
-.card-transactions i { color: #f59e0b; }
-.card-search i { color: #0f172a; }
-
-/* ================= STEP 8 – DARK MODE ================= */
-
-.theme-btn {
-  margin-left: 20px;
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: #cbd5e1;
-}
-
-.theme-btn:hover {
+/* LEFT SIDE – Corporate Banking Feel */
+.hero-split-left {
+  flex: 1;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 80px 40px;   /* increased top padding */
   color: white;
 }
 
-/* ---- DARK THEME ---- */
-body.dark {
-  background: #020617;
-  color: #e5e7eb;
+.hero-left-content {
+  max-width: 520px;
+  transform: translateY(-10px);  /* very subtle upward shift only */
 }
 
-body.dark .navbar {
-  background: #020617;
+.hero-left-content h1 {
+  font-size: 42px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.2;
 }
 
-body.dark .action-card {
-  background: #020617;
-  color: #e5e7eb;
-  border-color: #1e293b;
+.hero-left-content p {
+  font-size: 18px;
+  opacity: 0.9;
+  margin-bottom: 12px;  /* more breathing space */
 }
 
-body.dark .hero {
-  background: linear-gradient(135deg, #020617, #1e293b);
+/* Image clean (NO excessive floating) */
+.hero-main-image {
+  width: 110%;              /* slightly bigger */
+  max-width: 720px;         /* increased size */
+  margin-top: 10px;         /* reduced gap */
+  object-fit: contain;
+  filter: drop-shadow(0 40px 80px rgba(0,0,0,0.3));
 }
 
-body.dark input {
-  background: #020617;
-  color: #e5e7eb;
-  border: 1px solid #334155;
+.hero-main-image:hover {
+  transform: scale(1.04);
 }
 
-body.dark .footer {
-  color: #9ca3af;
-}
-
-/* ================= STEP 9 – MODAL ================= */
-
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: none;
+/* RIGHT SIDE – Modern Login Card */
+.hero-split-right {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  background: #f8fafc;
+  padding: 40px;
 }
 
-.modal-box {
+.login-card {
+  width: 420px;
+  padding: 40px;
   background: white;
-  padding: 30px;
   border-radius: 16px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease;
 }
 
-.modal-box h3 {
+.login-card:hover {
+  transform: translateY(-4px);
+}
+
+.login-card h2 {
+  font-size: 24px;
   margin-bottom: 10px;
 }
 
-.modal-box p {
-  color: #475569;
+.login-card .subtitle {
+  color: #64748b;
   margin-bottom: 25px;
 }
 
-.modal-actions {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-}
-
-body.dark .modal-box {
-  background: #020617;
-  color: #e5e7eb;
-}
-
-/* ================= STEP 10 – LOADER ================= */
-
-.loader {
-  position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,0.9);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  z-index: 1000;
-}
-
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 5px solid #e2e8f0;
-  border-top: 5px solid #2563eb;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 15px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-body.dark .loader {
-  background: rgba(2,6,23,0.9);
-}
-
-/* ================= STEP 12 – MICRO ANIMATIONS ================= */
-
-.action-card {
-  animation: cardPop 0.5s ease;
-}
-
-@keyframes cardPop {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .hero-split {
+    flex-direction: column;
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+
+  .hero-split-left,
+  .hero-split-right {
+    width: 100%;
+    padding: 50px 30px;
   }
-}
 
-button:active {
-  transform: scale(0.97);
-}
-
-/* ================= STEP 13 – ACCESSIBILITY ================= */
-
-a:focus,
-button:focus,
-input:focus {
-  outline: 3px solid rgba(37, 99, 235, 0.4);
-  outline-offset: 2px;
-}
-
-label {
-  display: block;
-  margin-bottom: 4px;
-}
-/* ---------- DARK MODE ---------- */
-body.dark {
-  background: #0f172a;
-  color: #e5e7eb;
-}
-
-body.dark .navbar {
-  background: #020617;
-}
-
-body.dark .action-card,
-body.dark .hero,
-body.dark .main {
-  background: #020617;
-  color: #e5e7eb;
-}
-
-body.dark a {
-  color: #93c5fd;
-}
-
-body.dark .btn.primary {
-  background: #2563eb;
-}
-/* ---------- CARDS ---------- */
-.action-card {
-  background: #ffffff;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-}
-
-body.dark .action-card {
-  background: #020617;
-}
-
-/* ---------- LINKS ---------- */
-a {
-  text-decoration: none;
-}
-
-a.btn {
-  display: inline-block;
-  margin-top: 8px;
-}
-/* ================== STEP D: VISUAL POLISH ================== */
-
-/* Smooth transitions everywhere */
-* {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Better input focus */
-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-}
-
-/* Card hover effect */
-.action-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-}
-
-/* Buttons polish */
-.btn {
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-
-.btn:hover {
-  transform: scale(1.02);
-}
-
-/* Disabled button */
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Footer polish */
-.footer {
-  text-align: center;
-  font-size: 14px;
-  opacity: 0.85;
-}
-
-/* Page fade-in */
-body {
-  animation: fadeInPage 0.8s ease-in-out;
-}
-
-@keyframes fadeInPage {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
+  .hero-left-content h1 {
+    font-size: 30px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .login-card {
+    width: 100%;
+    max-width: 420px;
   }
-}
 
-/* Navbar link underline animation */
-.nav-right a {
-  position: relative;
-}
-
-.nav-right a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -4px;
-  width: 0%;
-  height: 2px;
-  background: #93c5fd;
-  transition: width 0.3s ease;
-}
-
-.nav-right a:hover::after {
-  width: 100%;
-}
-
-/* Button ripple effect */
-button {
-  position: relative;
-  overflow: hidden;
-}
-
-button::after {
-  content: "";
-  position: absolute;
-  background: rgba(255,255,255,0.4);
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  opacity: 0;
-  transform: scale(1);
-}
-
-button:active::after {
-  opacity: 1;
-  transform: scale(20);
-  transition: transform 0.4s, opacity 0.8s;
-}
-
-/* Floating hero image */
-.floating {
-  animation: floatImage 4s ease-in-out infinite;
-}
-
-@keyframes floatImage {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-  100% { transform: translateY(0); }
-}
-
-/* Flip card effect */
-.flip-card {
-  perspective: 1000px;
-}
-
-.flip-card-inner {
-  transition: transform 0.8s;
-  transform-style: preserve-3d;
-}
-
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(180deg);
-}
-
-.flip-front, .flip-back {
-  backface-visibility: hidden;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.flip-back {
-  transform: rotateY(180deg);
+  .hero-floating-img {
+    max-width: 60%;
+  }
 }
