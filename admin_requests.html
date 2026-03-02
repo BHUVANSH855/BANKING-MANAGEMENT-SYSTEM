@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin – Account Requests</title>
+  <link rel="stylesheet" href="../CSS/styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-left">🏦 BankSys Admin</div>
+</nav>
+
+<section class="page-wrapper">
+  <h2>Pending Account Requests</h2>
+  <p class="subtitle">Approve or reject new account requests</p>
+
+  <div class="action-card">
+    <h3>Rahul Sharma</h3>
+    <p>Email: rahul@email.com</p>
+    <p>Phone: 9876543210</p>
+
+    <a href="/admin/approve/{{request_id}}" class="btn primary">Approve</a>
+    <button class="btn danger">Reject</button>
+  </div>
+
+  <div class="action-card">
+    <h3>Anita Verma</h3>
+    <p>Email: anita@email.com</p>
+    <p>Phone: 9123456780</p>
+
+    <button class="btn primary">Approve</button>
+    <button class="btn danger">Reject</button>
+  </div>
+</section>
+
+</body>
+</html>

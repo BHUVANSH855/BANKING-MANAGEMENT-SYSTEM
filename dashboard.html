@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BankSys Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Icons (optional but nice) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar glass">
+    <h2>🏦 BankSys Dashboard</h2>
+    <button id="logoutBtn" class="btn danger">Logout</button>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="dashboard">
+
+    <!-- ACCOUNT INFO -->
+    <section class="card glass">
+      <h3>Account Information</h3>
+      <p><strong>Account ID:</strong> <span id="accId"></span></p>
+      <p><strong>Name:</strong> <span id="accName"></span></p>
+      <p><strong>Balance:</strong> ₹<span id="accBalance"></span></p>
+    </section>
+
+    <!-- ACTIONS -->
+    <section class="actions">
+
+      <!-- DEPOSIT -->
+      <div class="card action-card glass">
+        <h3>Deposit</h3>
+        <form id="depositForm">
+          <input type="number" id="amount" placeholder="Amount" required>
+          <button class="btn success">Deposit</button>
+        </form>
+      </div>
+
+      <!-- WITHDRAW -->
+      <div class="card action-card glass">
+        <h3>Withdraw</h3>
+        <form id="withdrawForm">
+          <input type="number" id="amount" placeholder="Amount" required>
+          <input type="password" id="pin" placeholder="PIN" required>
+          <button class="btn danger">Withdraw</button>
+        </form>
+      </div>
+
+      <!-- TRANSFER -->
+      <div class="card action-card glass">
+        <h3>Transfer</h3>
+        <form id="transferForm">
+          <input type="number" id="to_account" placeholder="To Account ID" required>
+          <input type="number" id="amount" placeholder="Amount" required>
+          <input type="password" id="pin" placeholder="PIN" required>
+          <button class="btn primary">Transfer</button>
+        </form>
+      </div>
+
+    </section>
+
+    <!-- TRANSACTIONS -->
+    <section class="card glass">
+      <h3>Transactions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Balance</th>
+            <th>Note</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="txBody">
+          <tr>
+            <td colspan="5">Loading transactions...</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- JS -->
+  <script src="app.js"></script>
+
+  <!-- DASHBOARD INIT -->
+  <script>
+    const accId = localStorage.getItem("account_id");
+    window.addEventListener("storage", () => {
+  if (!localStorage.getItem("account_id")) {
+    window.location.href = "index.html";
+  }
+});
+
+
+    if (!accId) {
+      window.location.href = "index.html";
+    }
+
+    fetch(`http://127.0.0.1:5000/api/account/${accId}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("accId").textContent = data.account_id;
+        document.getElementById("accName").textContent = data.name;
+        document.getElementById("accBalance").textContent = data.balance;
+      });
+  </script>
+
+</body>
+</html>
