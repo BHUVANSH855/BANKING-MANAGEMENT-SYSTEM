@@ -8,7 +8,7 @@ import webbrowser
 from pathlib import Path
 import models
 import datetime
-from utils import verify_pin
+from app.core.utils import verify_pin
 from live_pincode_lookup import lookup_pin
 import re
 import winsound

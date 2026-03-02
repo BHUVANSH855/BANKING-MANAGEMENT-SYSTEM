@@ -1,6 +1,6 @@
 # models.py - account and transaction operations
-from db import get_conn
-from utils import hash_pin
+from app.core.db import get_conn
+from app.core.utils import hash_pin
 import hashlib
 
 # ---------- DEFAULT BANK ADMIN ----------
