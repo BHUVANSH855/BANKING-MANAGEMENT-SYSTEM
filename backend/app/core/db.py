@@ -40,14 +40,15 @@ def initialize_db(sql_file: str = None):
         else:
             cur.execute('''
             CREATE TABLE IF NOT EXISTS accounts (
-                account_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE,
-                phone TEXT,
-                balance REAL NOT NULL DEFAULT 0.0,
-                pin_hash TEXT NOT NULL,
-                created_at TEXT DEFAULT (datetime('now'))
-            )
+    account_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE,
+    phone TEXT,
+    balance REAL NOT NULL DEFAULT 0.0,
+    pin_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'USER',
+    created_at TEXT DEFAULT (datetime('now'))
+)
             ''')
             cur.execute('''
             CREATE TABLE IF NOT EXISTS transactions (
