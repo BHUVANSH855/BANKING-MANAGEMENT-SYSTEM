@@ -6,7 +6,7 @@ import qrcode
 from PIL import Image, ImageTk
 import webbrowser
 from pathlib import Path
-import models
+from backend.app.models import models
 import datetime
 from app.core.utils import verify_pin
 from live_pincode_lookup import lookup_pin
