@@ -22,8 +22,8 @@ def require_admin(pin):
 # Try to import project modules (models/db/utils)
 try:
     from backend.app.models import models
-    from app.core.db import initialize_db
-    from app.core.utils import verify_pin, hash_pin
+    from backend.app.core.db import initialize_db
+    from backend.app.core.utils import verify_pin, hash_pin
 except Exception as e:
     print("Error importing project modules (models/db/utils). Make sure these files are in the same folder as app.py.", file=sys.stderr)
     traceback.print_exc()
