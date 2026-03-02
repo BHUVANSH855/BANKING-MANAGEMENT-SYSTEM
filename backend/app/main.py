@@ -1,5 +1,5 @@
 # main.py - GUI entry point
-from gui import LoginGUI
+from app.gui.gui import LoginGUI
 import models
 
 if __name__ == "__main__":
