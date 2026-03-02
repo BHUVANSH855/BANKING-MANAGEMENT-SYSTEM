@@ -1,6 +1,6 @@
 # models.py - account and transaction operations
-from backend.app.core.db import get_conn
-from backend.app.core.utils import hash_pin
+from db import get_conn
+from utils import hash_pin
 import hashlib
 
 # ---------- DEFAULT BANK ADMIN ----------
@@ -15,7 +15,7 @@ def verify_admin(admin_id, password):
 
 
 def ensure_admin_account():
-    from backend.app.core.utils import hash_pin
+    from utils import hash_pin
     with get_conn(True) as conn:
         cur = conn.cursor()
         cur.execute("SELECT account_id FROM accounts WHERE role='ADMIN'")
@@ -58,7 +58,7 @@ def create_account(
     postal_code=None,
     account_type=None
 ):
-    from backend.app.core.utils import hash_pin
+    from utils import hash_pin
     pin_h = hash_pin(pin)
 
     with get_conn(True) as conn:

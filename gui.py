@@ -6,10 +6,10 @@ import qrcode
 from PIL import Image, ImageTk
 import webbrowser
 from pathlib import Path
-from backend.app.models import models
+import models
 import datetime
-from backend.app.core.utils import verify_pin
-from backend.app.services.pincode_service import lookup_pin
+from utils import verify_pin
+from live_pincode_lookup import lookup_pin
 import re
 import winsound
 import requests
@@ -1695,7 +1695,7 @@ class BankGUI(tk.Tk):
             self.state_var.set("Searching...")
 
             def do_lookup():
-                from backend.app.services.pincode_service import lookup_pin
+                from live_pincode_lookup import lookup_pin
                 data = lookup_pin(pin)
 
                 if data:

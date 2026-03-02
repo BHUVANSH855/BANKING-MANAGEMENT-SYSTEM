@@ -3,12 +3,7 @@ import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
-# Go up from:
-# backend/app/core/db.py
-# to project root
-BASE_DIR = Path(__file__).resolve().parents[3]
-
-DB_FILE = BASE_DIR / "database" / "banking.db"
+DB_FILE = Path(__file__).parent / 'banking.db'  # file in project folder
 
 @contextmanager
 def get_conn(autocommit: bool = False):
@@ -40,15 +35,14 @@ def initialize_db(sql_file: str = None):
         else:
             cur.execute('''
             CREATE TABLE IF NOT EXISTS accounts (
-    account_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE,
-    phone TEXT,
-    balance REAL NOT NULL DEFAULT 0.0,
-    pin_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'USER',
-    created_at TEXT DEFAULT (datetime('now'))
-)
+                account_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT UNIQUE,
+                phone TEXT,
+                balance REAL NOT NULL DEFAULT 0.0,
+                pin_hash TEXT NOT NULL,
+                created_at TEXT DEFAULT (datetime('now'))
+            )
             ''')
             cur.execute('''
             CREATE TABLE IF NOT EXISTS transactions (
@@ -64,3 +58,4 @@ def initialize_db(sql_file: str = None):
             ''')
             cur.execute('CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id)')
         conn.commit()
+
