@@ -86,7 +86,7 @@ BANK/
 ├── models.py               # Database & business logic
 ├── db.py                   # Database connection
 ├── utils.py                # Utility functions (PIN, helpers)
-├── main.py                 # Entry point (if used)
+├── main.py                 # Entry point (if used )
 │
 ├── admin_gui.py             # Admin interface
 ├── admin_gui_dashboard.py   # Admin dashboard
