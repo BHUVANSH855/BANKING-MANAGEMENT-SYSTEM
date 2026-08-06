@@ -1,182 +1,187 @@
-# 🏦 Banking Management System
+# 🏦 BankSys — Banking Management System
 
-A **feature-rich Banking Management System** built using **Python (Tkinter GUI)** with **SQLite database**, supporting **User & Admin roles**, secure transactions, real-time notifications, and a modern UI.
+A full-stack banking management system: a Flask + SQLite REST API behind a
+static HTML/CSS/JS frontend ("Vault Ledger" UI). Supports account creation,
+deposits, withdrawals, transfers, transaction history, PIN-based security
+with auto-lock, and a full admin console.
 
----
-
-## 🚀 Project Overview
-
-This project simulates a real-world banking system where:
-
-* **Users** can securely manage their bank accounts
-* **Admins** can create, monitor, and control accounts
-* All transactions are logged and reflected instantly
-* Email & SMS notifications are triggered for important activities
-
-The system focuses on **security, usability, and realistic banking workflows**.
+A Tkinter desktop GUI also ships in the same backend for local/offline use
+(see [Desktop GUI](#desktop-gui-optional) below).
 
 ---
 
-## ✨ Key Features
+## Features
 
-### 👤 User Features
+**Accounts**
+- Create an account with an opening deposit
+- Log in with account ID + PIN
+- Self-service PIN change
+- Account auto-locks after 3 wrong PIN attempts on withdraw/transfer
 
-* Secure login using **Account Number & PIN**
-* View account details and balance
-* Deposit money (UPI / QR / Cash / Cheque – simulated)
-* Withdraw money (ATM simulation with limits & charges)
-* Transfer funds between accounts
-* View transaction history
-* Change PIN securely
-* Download account statement (PDF)
-* Instant **Email & SMS alerts** for:
+**Transactions**
+- Deposit, withdraw, transfer between accounts
+- Full transaction ledger per account, timestamped
 
-  * Deposits
-  * Withdrawals
-  * Transfers
-  * PIN change
-  * Account lock
-
----
-
-### 🛠️ Admin Features
-
-* Admin login with separate credentials
-* Create new bank accounts
-* View any customer account
-* Edit account balance
-* Unlock locked accounts
-* Delete accounts permanently
-* Download customer account statements
+**Admin console**
+- PIN-protected admin login
+- Bank-wide stats (total users, total deposits, total withdrawals)
+- Central bank vault balance
+- User management: view balances, lock/unlock, delete accounts
+- Global transaction ledger across all accounts
+- Change the admin PIN
 
 ---
 
-## 🔐 Security Features
+## Tech stack
 
-* PIN stored using **secure hashing**
-* Account auto-lock after **3 failed PIN attempts**
-* Daily limits for:
-
-  * ATM withdrawals
-  * Fund transfers
-* Monthly maintenance & SMS charges
-* Admin-only access to sensitive actions
-
----
-
-## 🧱 System Architecture
-
-* **Frontend (GUI):** Tkinter (Python)
-* **Backend Logic:** Python modules
-* **Database:** SQLite (`banking.db`)
-* **Notifications:**
-
-  * Email via SMTP (Gmail)
-  * SMS via Fast2SMS API
-* **Reports:** PDF generation using ReportLab
+| Layer | Technology |
+|---|---|
+| Backend | Python 3, Flask, Flask-CORS |
+| Database | SQLite3 |
+| Frontend | Static HTML, CSS, vanilla JavaScript (no build step, no framework) |
+| Desktop GUI (optional) | Tkinter |
+| Deployment | Gunicorn (e.g. on Render) |
 
 ---
 
-## 📂 Project Structure
+## Project structure
 
 ```
-BANK/
-│
-├── gui.py                  # Main GUI application
-├── models.py               # Database & business logic
-├── db.py                   # Database connection
-├── utils.py                # Utility functions (PIN, helpers)
-├── main.py                 # Entry point (if used )
-│
-├── admin_gui.py             # Admin interface
-├── admin_gui_dashboard.py   # Admin dashboard
-│
-├── banking.db               # Main database
-├── init_db.sql              # Database schema
-│
-├── atm_cash_dispense.gif    # ATM simulation
-├── atm_cash.wav             # ATM sound
-├── atm.mp4                  # Demo video asset
-│
-├── index.html               # Web UI (optional)
-├── create_account.html
-├── deposit.html
-├── withdraw.html
-├── transfer.html
-├── transactions.html
-├── styles.css
-│
-├── account_1.pdf            # Sample generated statement
-└── README.md                # Project documentation
+BANKING-MANAGEMENT-SYSTEM/
+├── app.py                     # Production entry point (gunicorn app:app)
+├── requirements.txt
+├── database/
+│   ├── init_db.sql             # Full schema (accounts, transactions, system_funds)
+│   └── banking.db              # Created automatically on first run (git-ignored)
+├── backend/
+│   ├── __init__.py
+│   └── app/
+│       ├── app.py               # Debug-friendly copy of the same API, for local runs
+│       ├── models/models.py     # All account/transaction business logic
+│       ├── core/
+│       │   ├── db.py             # Connection handling + schema init
+│       │   └── utils.py          # PIN hashing/verification
+│       ├── services/
+│       │   └── pincode_service.py
+│       ├── gui/                  # Tkinter desktop client (optional, separate from the web app)
+│       └── tests/                # Ad-hoc manual test scripts (see CONTRIBUTING)
+├── frontend/
+│   ├── index.html, dashboard.html, deposit.html, withdraw.html,
+│   │   transfer.html, transactions.html, create_account.html,
+│   │   request_account.html, admin_login.html, admin_dashboard.html, …
+│   ├── css/                      # Design system (base, components, pages)
+│   ├── js/
+│   │   ├── api.js                 # Single source of truth for every API call
+│   │   ├── main.js                 # Shared UI behaviors (theme, toasts, modals)
+│   │   └── pages/                  # One script per page
+│   └── assets/
+└── tools/
+    ├── reset_db.py              # Wipes and recreates the local database
+    └── convert_mp4_to_gif.py
 ```
 
 ---
 
-## ⚙️ How to Run the Project
+## Getting started
 
-### 1️⃣ Install Requirements
+### 1. Install dependencies
 
 ```bash
-pip install pillow qrcode reportlab requests
+pip install -r requirements.txt
 ```
 
-### 2️⃣ Run the Application
+### 2. Run the app
 
 ```bash
-python gui.py
+python app.py
+```
+
+This automatically creates `database/banking.db` from `database/init_db.sql`
+on first run, and seeds a default admin account (see
+[Default admin account](#default-admin-account) — **change this PIN before
+any real use**).
+
+Open **http://127.0.0.1:5000** in a browser.
+
+### 3. Reset the database (optional, destructive)
+
+```bash
+python tools/reset_db.py
+```
+
+Wipes `database/banking.db` and rebuilds it from schema. All accounts and
+transactions are lost.
+
+---
+
+## Default admin account
+
+On first run, an admin account is created automatically:
+
+- Email: `admin@bank.local`
+- PIN: `123456`
+
+**Change this immediately** via the admin console (Admin → Change admin PIN)
+or `POST /api/admin/change-pin`. Do not deploy with the default PIN. See
+[SECURITY.md](SECURITY.md).
+
+---
+
+## API reference
+
+All endpoints are under `/api`. Requests/responses are JSON (form-encoded
+also accepted on the write endpoints).
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/create_account` | Open a new account |
+| POST | `/api/deposit` | Credit an account |
+| POST | `/api/withdraw` | Debit an account (PIN required) |
+| POST | `/api/transfer` | Move funds between two accounts (PIN required) |
+| GET | `/api/transactions/<account_id>` | Transaction history for an account |
+| GET | `/api/account/<account_id>` | Account details (no PIN hash) |
+| POST | `/api/account/<account_id>/change-pin` | Self-service PIN change |
+| POST | `/api/admin/login` | Admin PIN check |
+| POST | `/api/admin/change-pin` | Change the admin PIN |
+| POST | `/api/admin/bank-balance` | Central vault balance |
+| POST | `/api/admin/stats` | Bank-wide totals |
+| POST | `/api/admin/users` | List all user accounts |
+| POST | `/api/admin/transactions` | Global transaction ledger |
+| POST | `/api/admin/toggle-lock` | Lock/unlock a user account |
+| POST | `/api/admin/delete-account` | Permanently delete a user account |
+
+Every admin endpoint requires the admin PIN in the request body — there's no
+session/token layer, so treat the PIN like a bearer credential.
+
+---
+
+## Desktop GUI (optional)
+
+`backend/app/gui/gui.py` is a separate Tkinter client against the same
+`models.py` layer. It's independent of the web app — running one doesn't
+require the other. Launch it with:
+
+```bash
+python -m backend.app.gui.gui
 ```
 
 ---
 
-## 📧 Email & 📱 SMS Configuration
+## Contributing
 
-> ⚠️ **Important:**
-> For security reasons, do NOT commit real credentials.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-* Update SMTP email & app password inside `send_email()`
-* Update SMS API key inside `send_sms()`
-* Use environment variables for production
+## Security
 
----
+See [SECURITY.md](SECURITY.md) — please report vulnerabilities privately,
+not as a public issue.
 
-## 📊 Notifications Triggered
+## Code of conduct
 
-* Account created
-* Deposit successful
-* Withdrawal successful
-* Transfer successful
-* PIN changed
-* Account locked / unlocked
-* Account deleted
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-All notifications are sent **instantly** via Email and SMS.
+## License
 
----
-
-## 📄 Future Enhancements
-
-* OTP-based login
-* Interest calculation
-* Loan & EMI module
-* Mobile app integration
-* Role-based permissions dashboard
-* Cloud database support
-
----
-
-## 👨‍💻 Developed By
-
-**Banking Management System – Academic Project**
-Developed using Python & SQLite for learning and demonstration purposes.
-
----
-
-## ⭐ Final Notes
-
-* This project is **ideal for college submission, demos, and internships**
-* Shows strong understanding of **GUI, DB, security, and system design**
-* Clean structure and scalable logic
-
----
-
-✨ *Thank you for exploring this project!*
+No license file is currently included. Until one is added, all rights are
+reserved by the repository owner — open an issue if you'd like to use this
+project under a specific license.
