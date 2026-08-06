@@ -51,6 +51,7 @@ const BankAPI = (() => {
     transfer: (from_id, to_id, amount, pin) => request("/transfer", { method: "POST", data: { from_id, to_id, amount, pin } }),
     transactions: (account_id, limit = 200) => request(`/transactions/${encodeURIComponent(account_id)}?limit=${limit}`),
     getAccount: (account_id) => request(`/account/${encodeURIComponent(account_id)}`),
+    changePin: (account_id, old_pin, new_pin) => request(`/account/${encodeURIComponent(account_id)}/change-pin`, { method: "POST", data: { old_pin, new_pin } }),
 
     adminLogin: (pin) => request("/admin/login", { method: "POST", data: { pin } }),
     adminChangePin: (old_pin, new_pin) => request("/admin/change-pin", { method: "POST", data: { old_pin, new_pin } }),
@@ -59,6 +60,7 @@ const BankAPI = (() => {
     adminUsers: (pin) => request("/admin/users", { method: "POST", data: { pin } }),
     adminTransactions: (pin) => request("/admin/transactions", { method: "POST", data: { pin } }),
     adminToggleLock: (pin, account_id) => request("/admin/toggle-lock", { method: "POST", data: { pin, account_id } }),
+    adminDeleteAccount: (pin, account_id) => request("/admin/delete-account", { method: "POST", data: { pin, account_id } }),
   };
 })();
 

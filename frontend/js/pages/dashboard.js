@@ -111,4 +111,22 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) { Toast.error(err.message); }
     finally { Loader.hide(); }
   });
+
+  /* ---------- CHANGE PIN ---------- */
+  document.getElementById("changePinForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const oldPin = document.getElementById("oldPin");
+    const newPin = document.getElementById("newPin");
+    let ok = true;
+    if (!validatePin(oldPin.value)) { markInvalid(oldPin, "Enter your current PIN"); ok = false; }
+    if (!validatePin(newPin.value)) { markInvalid(newPin, "PIN must be 4–6 digits"); ok = false; }
+    if (!ok) return;
+    Loader.show("Updating PIN…");
+    try {
+      await BankAPI.changePin(accountId, oldPin.value, newPin.value);
+      Toast.success("PIN updated. Use it next time you sign in.");
+      oldPin.value = ""; newPin.value = "";
+    } catch (err) { Toast.error(err.message); }
+    finally { Loader.hide(); }
+  });
 });

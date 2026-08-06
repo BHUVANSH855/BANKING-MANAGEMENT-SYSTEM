@@ -30,10 +30,20 @@ except Exception as e:
     # We continue because for debugging static files we don't need models to be present necessarily.
 
 # Setup
-PROJECT_ROOT = Path(__file__).resolve().parent
-FRONTEND_DIR = PROJECT_ROOT / "frontend"
-DB_FILE = PROJECT_ROOT / "banking.db"
-INIT_SQL = PROJECT_ROOT / "init_db.sql"
+# NOTE: this file lives at backend/app/app.py, two levels below the repo
+# root. It previously computed every path relative to *this* folder, which
+# meant it looked for the frontend at backend/app/frontend (doesn't exist),
+# the database at backend/app/banking.db (doesn't exist), and the schema at
+# backend/app/init_db.sql (doesn't exist) — so every fresh checkout silently
+# fell back to initialize_db()'s bare-bones inline schema, which is missing
+# `system_funds`, `is_locked` and `failed_attempts`. That made deposit,
+# withdraw, transfer and the admin lock/unlock endpoints crash with
+# "no such table/column" on a brand-new database.
+PROJECT_ROOT = Path(__file__).resolve().parent          # backend/app
+REPO_ROOT = PROJECT_ROOT.parent.parent                   # repo root
+FRONTEND_DIR = REPO_ROOT / "frontend"
+DB_FILE = REPO_ROOT / "database" / "banking.db"
+INIT_SQL = REPO_ROOT / "database" / "init_db.sql"
 
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="/")
 CORS(app)
@@ -156,7 +166,12 @@ def api_withdraw():
         if not acc:
             return jsonify({"error": "account not found"}), 404
         if not verify_pin(pin, acc["pin_hash"]):
+            # Wires up models.register_failed_attempt, which existed but was
+            # never called — accounts never actually auto-locked after 3
+            # wrong PINs as the model layer was designed to do.
+            models.register_failed_attempt(account_id)
             return jsonify({"error": "invalid pin"}), 403
+        models.reset_failed_attempts(account_id)
         new_bal = models.withdraw(account_id, amount)
         return jsonify({"balance": new_bal})
     except Exception as e:
@@ -178,7 +193,9 @@ def api_transfer():
         if not acc:
             return jsonify({"error": "source account not found"}), 404
         if not verify_pin(pin, acc["pin_hash"]):
+            models.register_failed_attempt(from_id)
             return jsonify({"error": "invalid pin"}), 403
+        models.reset_failed_attempts(from_id)
         new_from, new_to = models.transfer(from_id, to_id, amount)
         return jsonify({"from_balance": new_from, "to_balance": new_to})
     except Exception as e:
@@ -209,6 +226,28 @@ def api_get_account(account_id: int):
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
     
+@app.route("/api/account/<int:account_id>/change-pin", methods=["POST"])
+def api_change_pin(account_id: int):
+    """Self-service PIN change for a regular user (uses models.update_pin,
+    which previously existed but was never wired up to any route)."""
+    try:
+        data = request.get_json(force=True) or {}
+        old_pin = data.get("old_pin") or ""
+        new_pin = data.get("new_pin") or ""
+        acc = models.get_account(account_id)
+        if not acc:
+            return jsonify({"error": "account not found"}), 404
+        if not verify_pin(old_pin, acc["pin_hash"]):
+            return jsonify({"error": "invalid current pin"}), 403
+        models.update_pin(account_id, new_pin)
+        return jsonify({"status": "PIN updated successfully"})
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 400
+
+
 @app.route("/api/admin/login", methods=["POST"])
 def admin_login():
     data = request.get_json(force=True)
@@ -334,7 +373,7 @@ def admin_all_transactions():
         cur = conn.cursor()
         cur.execute("""
             SELECT
-                t.id,
+                t.tx_id AS id,
                 t.account_id,
                 a.name,
                 t.type,
@@ -382,6 +421,11 @@ def admin_toggle_lock():
             "UPDATE accounts SET is_locked=? WHERE account_id=?",
             (new_status, account_id)
         )
+        if new_status == 0:
+            cur.execute(
+                "UPDATE accounts SET failed_attempts=0 WHERE account_id=?",
+                (account_id,)
+            )
 
         conn.commit()
 
@@ -390,6 +434,25 @@ def admin_toggle_lock():
         "status": "Locked" if new_status else "Active"
     })
 
+
+@app.route("/api/admin/delete-account", methods=["POST"])
+def admin_delete_account():
+    """Wires up models.delete_account, which previously existed with no route."""
+    data = request.get_json(force=True)
+    pin = data.get("pin", "")
+    account_id = data.get("account_id")
+
+    if not require_admin(pin):
+        return jsonify({"error": "Unauthorized"}), 403
+    if not account_id:
+        return jsonify({"error": "Account ID required"}), 400
+
+    acc = models.get_account(account_id)
+    if not acc:
+        return jsonify({"error": "User not found"}), 404
+
+    models.delete_account(account_id)
+    return jsonify({"status": "deleted", "account_id": account_id})
 
 
 # --------------------------------------------------------------------

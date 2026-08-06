@@ -51,6 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
       body.querySelectorAll("[data-toggle]").forEach((btn) => {
         btn.addEventListener("click", () => toggleLock(btn.dataset.toggle, btn.dataset.name));
       });
+      body.querySelectorAll("[data-delete]").forEach((btn) => {
+        btn.addEventListener("click", () => deleteAccount(btn.dataset.delete, btn.dataset.name));
+      });
     } catch (err) {
       handleAuthError(err);
     }
@@ -67,7 +70,30 @@ document.addEventListener("DOMContentLoaded", () => {
       <td><button class="btn sm ${locked ? "success" : "danger"}" data-toggle="${u.account_id}" data-name="${u.name}">
         ${locked ? "Unlock" : "Lock"}
       </button></td>
+      <td><button class="btn sm ghost" data-delete="${u.account_id}" data-name="${u.name}" title="Delete account">
+        <i class="fa-solid fa-trash"></i>
+      </button></td>
     </tr>`;
+  }
+
+  async function deleteAccount(accountId, name) {
+    const ok = await confirmModal({
+      title: "Delete this account?",
+      body: `This permanently deletes ${name}'s account (ID ${accountId}) and its transaction history. This can't be undone.`,
+      confirmLabel: "Delete permanently",
+      danger: true,
+    });
+    if (!ok) return;
+    Loader.show("Deleting account…");
+    try {
+      await BankAPI.adminDeleteAccount(pin, accountId);
+      Toast.success(`Account ${accountId} deleted.`);
+      loadUsers(); loadStats();
+    } catch (err) {
+      Toast.error(err.message);
+    } finally {
+      Loader.hide();
+    }
   }
 
   async function toggleLock(accountId, name) {
