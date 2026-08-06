@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Login — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div class="nav-tools">
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+  </div>
+</nav>
+
+<main class="admin-gate">
+  <div class="passbook center reveal">
+    <span class="eyebrow">Restricted</span>
+    <h2 style="margin-top:.3em;"><i class="fa-solid fa-user-shield" style="color:var(--brass-light);"></i> Admin sign-in</h2>
+    <p style="margin-bottom:24px;">This area manages every account in the bank. Enter the admin PIN to continue.</p>
+
+    <form id="adminLoginForm" novalidate>
+      <div class="field">
+        <label for="pin">Admin PIN</label>
+        <input type="password" id="pin" maxlength="6" placeholder="4–6 digit PIN" required autofocus>
+      </div>
+      <button class="btn block" type="submit">Enter admin console</button>
+    </form>
+
+    <p style="text-align:center; margin-top:18px; font-size:.85rem;">
+      <a href="index.html" style="color:var(--text-low);"><i class="fa-solid fa-arrow-left"></i> Back to BankSys</a>
+    </p>
+  </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/admin-login.js"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request an Account — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div class="nav-links" data-nav-links>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="deposit.html">Deposit</a>
+    <a href="withdraw.html">Withdraw</a>
+    <a href="transfer.html">Transfer</a>
+    <a href="transactions.html">Transactions</a>
+  </div>
+  <div class="nav-tools">
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+    <button class="icon-btn nav-burger" data-nav-burger title="Menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<section class="hero-simple">
+  <div class="hero-simple-row">
+    <div class="glyph"><i class="fa-solid fa-file-signature"></i></div>
+    <div>
+      <span class="eyebrow">Account opening</span>
+      <h1 style="margin:0;">Request a new account</h1>
+    </div>
+  </div>
+</section>
+
+<main class="page-main" style="padding-top:10px;">
+  <div class="wrap">
+    <div class="passbook wide reveal">
+      <p style="margin-bottom:6px;">Submit your details below to open a new BankSys account.</p>
+      <p style="font-size:.82rem; margin-bottom:22px;">
+        <i class="fa-solid fa-circle-info" style="color:var(--brass-light);"></i>
+        The connected backend opens accounts instantly on submission — there's no separate
+        manual-approval queue yet, so this doubles as your account creation form.
+      </p>
+
+      <form id="requestForm" novalidate>
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" required>
+          </div>
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="text" id="phone" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="initial_balance">Initial deposit (₹)</label>
+            <input type="number" id="initial_balance" min="0" step="0.01" placeholder="Minimum ₹500" required>
+          </div>
+          <div class="field">
+            <label for="pin">Create PIN</label>
+            <input type="password" id="pin" maxlength="6" placeholder="4–6 digit PIN" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="purpose">Account purpose <small style="text-transform:none; letter-spacing:0;">(optional, kept on this device only)</small></label>
+          <input type="text" id="purpose" placeholder="Savings / Salary / Student">
+        </div>
+        <button class="btn block" type="submit">Submit request</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">BankSys — Vault Ledger UI · Backend: Python + SQLite</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/request-account.js"></script>
+</body>
+</html>

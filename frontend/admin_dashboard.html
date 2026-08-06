@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Console — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<header class="dash-top">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-user-shield"></i></span> BankSys Admin</a>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+    <button class="btn danger sm" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+  </div>
+</header>
+
+<main class="page-main" style="padding-top:32px;">
+  <div class="wrap">
+
+    <section class="section-head" style="text-align:left; margin-bottom:26px; max-width:none;">
+      <span class="eyebrow">Bank overview</span>
+      <h2>Admin console</h2>
+    </section>
+
+    <div class="stat-grid reveal">
+      <div class="stat-card">
+        <span class="label">Total users</span>
+        <div class="value mono" id="statUsers">—</div>
+        <i class="fa-solid fa-users"></i>
+      </div>
+      <div class="stat-card">
+        <span class="label">Total deposits</span>
+        <div class="value mono" id="statDeposits">—</div>
+        <i class="fa-solid fa-circle-arrow-down"></i>
+      </div>
+      <div class="stat-card">
+        <span class="label">Total withdrawals</span>
+        <div class="value mono" id="statWithdrawals">—</div>
+        <i class="fa-solid fa-money-bill-wave"></i>
+      </div>
+      <div class="stat-card">
+        <span class="label">Bank vault balance</span>
+        <div class="value mono" id="statVault">—</div>
+        <i class="fa-solid fa-building-columns"></i>
+      </div>
+    </div>
+
+    <div class="dash-grid" style="margin-top:26px;">
+
+      <section class="card-plain reveal">
+        <div class="mini-form-head"><i class="fa-solid fa-users"></i><h3 style="margin:0;">Users</h3></div>
+        <div class="ledger-wrap">
+          <table class="ledger">
+            <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+            <tbody id="usersBody">
+              <tr><td colspan="6"><div class="skeleton" style="height:16px;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mini-forms">
+        <div class="card-plain reveal">
+          <div class="mini-form-head"><i class="fa-solid fa-key"></i><h3 style="margin:0;">Change admin PIN</h3></div>
+          <form id="changePinForm" novalidate>
+            <div class="field">
+              <label for="oldPin">Current PIN</label>
+              <input type="password" id="oldPin" maxlength="6" required>
+            </div>
+            <div class="field">
+              <label for="newPin">New PIN</label>
+              <input type="password" id="newPin" maxlength="6" placeholder="4–6 digits" required>
+            </div>
+            <button class="btn block" type="submit">Update PIN</button>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <section class="card-plain reveal" style="margin-top:22px;">
+      <div class="mini-form-head"><i class="fa-solid fa-chart-line"></i><h3 style="margin:0;">All transactions</h3></div>
+      <div class="ledger-wrap">
+        <table class="ledger">
+          <thead><tr><th>Date</th><th>Account</th><th>Holder</th><th>Type</th><th>Amount</th><th>Balance</th><th>Note</th></tr></thead>
+          <tbody id="allTxBody">
+            <tr><td colspan="7"><div class="skeleton" style="height:16px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="footer">BankSys Admin Console — Vault Ledger UI</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/admin-dashboard.js"></script>
+</body>
+</html>

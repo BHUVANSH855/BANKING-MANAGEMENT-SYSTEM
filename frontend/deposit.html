@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deposit — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div class="nav-links" data-nav-links>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="deposit.html" class="active">Deposit</a>
+    <a href="withdraw.html">Withdraw</a>
+    <a href="transfer.html">Transfer</a>
+    <a href="transactions.html">Transactions</a>
+  </div>
+  <div class="nav-tools">
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+    <button class="icon-btn nav-burger" data-nav-burger title="Menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<section class="hero-simple">
+  <div class="hero-simple-row">
+    <div class="glyph"><i class="fa-solid fa-circle-arrow-down"></i></div>
+    <div>
+      <span class="eyebrow">Credit entry</span>
+      <h1 style="margin:0;">Deposit funds</h1>
+    </div>
+  </div>
+</section>
+
+<main class="page-main" style="padding-top:10px;">
+  <div class="wrap">
+    <div class="passbook wide reveal">
+      <form id="depositForm" novalidate>
+        <div class="field">
+          <label for="account_id">Account ID</label>
+          <input type="number" id="account_id" placeholder="Enter account ID" required>
+        </div>
+        <div class="field">
+          <label for="amount">Amount (₹)</label>
+          <input type="number" id="amount" min="1" step="0.01" placeholder="0.00" required>
+          <small class="hint">Enter an amount greater than ₹0</small>
+        </div>
+        <button class="btn success block" type="submit">Deposit</button>
+      </form>
+      <a href="index.html" style="display:block; margin-top:16px; text-align:center; font-size:.9rem; color:var(--text-low);">Cancel</a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">BankSys — Vault Ledger UI · Backend: Python + SQLite</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/deposit.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transactions — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div class="nav-links" data-nav-links>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="deposit.html">Deposit</a>
+    <a href="withdraw.html">Withdraw</a>
+    <a href="transfer.html">Transfer</a>
+    <a href="transactions.html" class="active">Transactions</a>
+  </div>
+  <div class="nav-tools">
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+    <button class="icon-btn nav-burger" data-nav-burger title="Menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<section class="hero-simple">
+  <div class="hero-simple-row">
+    <div class="glyph"><i class="fa-solid fa-chart-line"></i></div>
+    <div>
+      <span class="eyebrow">Full history</span>
+      <h1 style="margin:0;">Transaction ledger</h1>
+    </div>
+  </div>
+</section>
+
+<main class="page-main" style="padding-top:10px;">
+  <div class="wrap">
+
+    <div class="card-plain reveal" style="margin-bottom:24px;">
+      <form id="txForm" novalidate style="display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="field" style="flex:1; min-width:220px; margin-bottom:0;">
+          <label for="account_id">Account ID</label>
+          <input type="number" id="account_id" placeholder="Enter account ID" required>
+        </div>
+        <button class="btn secondary" type="submit" style="height:50px;">
+          <i class="fa-solid fa-magnifying-glass"></i> Load
+        </button>
+      </form>
+    </div>
+
+    <div class="card-plain reveal">
+      <div class="ledger-wrap">
+        <table class="ledger">
+          <thead>
+            <tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance</th><th>Note</th></tr>
+          </thead>
+          <tbody id="txBody">
+            <tr><td colspan="5"><div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i>Enter an account ID to load its history</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">BankSys — Vault Ledger UI · Backend: Python + SQLite</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/transactions.js"></script>
+</body>
+</html>

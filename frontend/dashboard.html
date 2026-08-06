@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<header class="dash-top">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a class="icon-btn" href="transactions.html" title="Full ledger"><i class="fa-solid fa-chart-line"></i></a>
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+    <button class="btn danger sm" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+  </div>
+</header>
+
+<main class="page-main" style="padding-top:32px;">
+  <div class="wrap">
+
+    <section class="balance-hero reveal">
+      <span class="eyebrow">Account overview</span>
+      <div class="balance-figure"><sup>₹</sup><span id="accBalance">0.00</span></div>
+      <div class="balance-meta">
+        <div>Account ID<strong class="mono" id="accId">—</strong></div>
+        <div>Holder<strong id="accName">—</strong></div>
+        <div>Status<strong id="accStatus">—</strong></div>
+      </div>
+    </section>
+
+    <div class="dash-grid">
+
+      <section class="card-plain reveal">
+        <div class="mini-form-head"><i class="fa-solid fa-chart-line"></i><h3 style="margin:0;">Recent transactions</h3></div>
+        <div class="ledger-wrap">
+          <table class="ledger">
+            <thead><tr><th>Type</th><th>Amount</th><th>Balance</th><th>Note</th><th>Date</th></tr></thead>
+            <tbody id="txBody">
+              <tr><td colspan="5"><div class="skeleton" style="height:16px;width:100%;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="mini-forms">
+
+        <div class="card-plain reveal">
+          <div class="mini-form-head"><i class="fa-solid fa-circle-arrow-down"></i><h3 style="margin:0;">Deposit</h3></div>
+          <form id="depositForm" novalidate>
+            <div class="field">
+              <label for="depositAmount">Amount (₹)</label>
+              <input type="number" id="depositAmount" min="1" step="0.01" placeholder="0.00" required>
+            </div>
+            <button class="btn success block" type="submit">Deposit</button>
+          </form>
+        </div>
+
+        <div class="card-plain reveal">
+          <div class="mini-form-head"><i class="fa-solid fa-money-bill-wave"></i><h3 style="margin:0;">Withdraw</h3></div>
+          <form id="withdrawForm" novalidate>
+            <div class="field">
+              <label for="withdrawAmount">Amount (₹)</label>
+              <input type="number" id="withdrawAmount" min="1" step="0.01" placeholder="0.00" required>
+            </div>
+            <div class="field">
+              <label for="withdrawPin">PIN</label>
+              <input type="password" id="withdrawPin" maxlength="6" placeholder="4–6 digit PIN" required>
+            </div>
+            <button class="btn danger block" type="submit">Withdraw</button>
+          </form>
+        </div>
+
+        <div class="card-plain reveal">
+          <div class="mini-form-head"><i class="fa-solid fa-arrow-right-arrow-left"></i><h3 style="margin:0;">Transfer</h3></div>
+          <form id="transferForm" novalidate>
+            <div class="field">
+              <label for="transferTo">To account ID</label>
+              <input type="number" id="transferTo" placeholder="Recipient account ID" required>
+            </div>
+            <div class="field">
+              <label for="transferAmount">Amount (₹)</label>
+              <input type="number" id="transferAmount" min="1" step="0.01" placeholder="0.00" required>
+            </div>
+            <div class="field">
+              <label for="transferPin">PIN</label>
+              <input type="password" id="transferPin" maxlength="6" placeholder="4–6 digit PIN" required>
+            </div>
+            <button class="btn block" type="submit">Transfer</button>
+          </form>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">BankSys — Vault Ledger UI · Backend: Python + SQLite</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/dashboard.js"></script>
+</body>
+</html>

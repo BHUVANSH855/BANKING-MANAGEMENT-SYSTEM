@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div class="nav-tools">
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+  </div>
+</nav>
+
+<main class="page-main" style="padding-top:60px;">
+  <div class="wrap">
+    <div class="passbook center reveal">
+      <span class="eyebrow">Account access</span>
+      <h2 style="margin-top:.3em;">Log in to your ledger</h2>
+      <p style="margin-bottom:24px;">Enter your account number and PIN.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="account_id">Account ID</label>
+          <input type="number" id="account_id" placeholder="Enter account id" required>
+        </div>
+        <div class="field">
+          <label for="pin">PIN</label>
+          <input type="password" id="pin" placeholder="Enter PIN" maxlength="6" required>
+        </div>
+        <button class="btn block" type="submit">Log in</button>
+      </form>
+
+      <p style="text-align:center; margin-top:18px; font-size:.9rem;">
+        New here? <a href="request_account.html" style="color:var(--brass-light); font-weight:600;">Request an account</a>
+      </p>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">Secure login · BankSys</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/home.js"></script>
+</body>
+</html>

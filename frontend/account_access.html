@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Account Access — BankSys</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div class="nav-tools">
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+  </div>
+</nav>
+
+<main class="page-main" style="padding-top:60px;">
+  <div class="wrap">
+    <div class="passbook center reveal">
+      <h2>Account access</h2>
+      <p class="hint" style="margin-bottom:20px;">Log in if you already have an account.</p>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="account_id">Account ID</label>
+          <input type="number" id="account_id" required>
+        </div>
+        <div class="field">
+          <label for="pin">PIN</label>
+          <input type="password" id="pin" maxlength="6" required>
+        </div>
+        <button class="btn block" type="submit">Log in</button>
+      </form>
+
+      <hr class="divider">
+
+      <p style="text-align:center;">Don't have an account?</p>
+      <a href="request_account.html" class="btn secondary block" style="text-align:center;">Request new account</a>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">BankSys — Vault Ledger UI</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BankSys — Vault Ledger Banking</title>
+<meta name="description" content="Secure, modern banking management — deposits, withdrawals, transfers and account access.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark"><i class="fa-solid fa-building-columns"></i></span> BankSys</a>
+  <div class="nav-links" data-nav-links>
+    <a href="index.html" class="active">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="deposit.html">Deposit</a>
+    <a href="withdraw.html">Withdraw</a>
+    <a href="transfer.html">Transfer</a>
+    <a href="transactions.html">Transactions</a>
+  </div>
+  <div class="nav-tools">
+    <a class="icon-btn" href="admin_login.html" title="Admin"><i class="fa-solid fa-user-shield"></i></a>
+    <button class="icon-btn" data-theme-toggle title="Toggle theme"></button>
+    <button class="icon-btn nav-burger" data-nav-burger title="Menu"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<section class="hero-split">
+  <div class="hero-copy">
+    <span class="eyebrow">Est. ledger no. 001</span>
+    <h1>Banking that reads<br>like a well-kept book.</h1>
+    <p class="lede">Open an account, move money, and track every entry — with the clarity of a passbook and the speed of software. Built on a lightweight Flask &amp; SQLite ledger.</p>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;">
+      <a href="#login-card" class="btn">Access my account <i class="fa-solid fa-arrow-right"></i></a>
+      <a href="request_account.html" class="btn secondary">Open an account</a>
+    </div>
+    <div class="hero-stats">
+      <div><strong class="mono">256-bit</strong><span>PIN hashing</span></div>
+      <div><strong class="mono">24/7</strong><span>Ledger access</span></div>
+      <div><strong class="mono">₹0</strong><span>Hidden fees</span></div>
+    </div>
+  </div>
+
+  <div class="hero-art">
+    <div class="orbit-ring"><div class="orbit-coin">₹</div></div>
+    <div class="orbit-ring r2"></div>
+    <img src="assets/bank-hero.png" alt="Illustration of a bank building with stacked gold coins">
+  </div>
+</section>
+
+<main class="page-main" style="padding-top:10px;">
+  <div class="wrap">
+
+    <section id="login-card" style="max-width:460px; margin:0 auto 70px;">
+      <div class="passbook center reveal">
+        <span class="eyebrow">Account access</span>
+        <h2 style="margin-top:.3em;">Log in to your ledger</h2>
+        <p style="margin-bottom:24px;">Enter your account number and PIN.</p>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="account_id">Account ID</label>
+            <input type="number" id="account_id" placeholder="e.g. 1001" required inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="pin">PIN</label>
+            <input type="password" id="pin" placeholder="4–6 digit PIN" required maxlength="6">
+          </div>
+          <button class="btn block" type="submit">
+            <span class="btn-label">Log in</span>
+          </button>
+        </form>
+
+        <p style="text-align:center; margin-top:18px; font-size:.9rem;">
+          New here? <a href="request_account.html" style="color:var(--brass-light); font-weight:600;">Request an account</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="section-head reveal">
+      <span class="eyebrow">Quick actions</span>
+      <h2>Everything the ledger can do</h2>
+      <p>Every action below talks to the same live API your backend already exposes.</p>
+    </section>
+
+    <div class="actions-grid">
+
+      <div class="action-tile flip-card reveal">
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <i class="fa-solid fa-user-plus tile-icon"></i>
+            <h3>Create account</h3>
+            <p>Open a fresh ledger with a starting deposit.</p>
+            <span class="go">Get started <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+          <div class="flip-face flip-back">
+            <p>New accounts are opened instantly once submitted — no waiting on manual approval.</p>
+            <a href="request_account.html" class="btn sm">Open account</a>
+          </div>
+        </div>
+      </div>
+
+      <a href="deposit.html" class="action-tile reveal" style="display:block;">
+        <i class="fa-solid fa-circle-arrow-down tile-icon"></i>
+        <h3>Deposit money</h3>
+        <p>Credit funds into any account by account ID.</p>
+        <span class="go">Deposit now <i class="fa-solid fa-arrow-right"></i></span>
+      </a>
+
+      <a href="withdraw.html" class="action-tile reveal" style="display:block;">
+        <i class="fa-solid fa-money-bill-wave tile-icon"></i>
+        <h3>Withdraw cash</h3>
+        <p>Withdraw funds securely with account ID and PIN.</p>
+        <span class="go">Withdraw <i class="fa-solid fa-arrow-right"></i></span>
+      </a>
+
+      <a href="transfer.html" class="action-tile reveal" style="display:block;">
+        <i class="fa-solid fa-arrow-right-arrow-left tile-icon"></i>
+        <h3>Transfer funds</h3>
+        <p>Move money between two accounts instantly.</p>
+        <span class="go">Transfer <i class="fa-solid fa-arrow-right"></i></span>
+      </a>
+
+      <a href="transactions.html" class="action-tile reveal" style="display:block;">
+        <i class="fa-solid fa-chart-line tile-icon"></i>
+        <h3>Transaction history</h3>
+        <p>Every deposit, withdrawal and transfer, timestamped.</p>
+        <span class="go">View ledger <i class="fa-solid fa-arrow-right"></i></span>
+      </a>
+
+      <a href="dashboard.html" class="action-tile reveal" style="display:block;">
+        <i class="fa-solid fa-gauge-high tile-icon"></i>
+        <h3>My dashboard</h3>
+        <p>Balance, quick actions and recent activity in one place.</p>
+        <span class="go">Open dashboard <i class="fa-solid fa-arrow-right"></i></span>
+      </a>
+
+    </div>
+  </div>
+</main>
+
+<footer class="footer">BankSys — Vault Ledger UI · Backend: Python + SQLite</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/home.js"></script>
+</body>
+</html>
