@@ -10,7 +10,7 @@ A Tkinter desktop GUI also ships in the same backend for local/offline use
 
 ---
 
-## Features
+## Features:
 
 **Accounts**
 - Create an account with an opening deposit
