@@ -168,16 +168,13 @@ python -m backend.app.gui.gui
 ---
 
 ## Contributing
-
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Security
-
 See [SECURITY.md](SECURITY.md) — please report vulnerabilities privately,
 not as a public issue.
 
 ## Code of conduct
-
 See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
